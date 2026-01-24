@@ -1,0 +1,67 @@
+---
+interface Props{
+    variant?: 'primary' | 'secondary' | 'ghost';
+    size?: 'sm' | 'md' | 'lg';
+    href?: string;
+    class?: string;
+}
+
+const {
+    variant = 'primary', 
+    size = 'md',
+    href,
+    class: className = ''
+} = Astro.props;
+
+const baseClasses = 'inline-flex items-center justify-center font-mono font-semibold transition-all duration-300 rounded-lg';
+
+const variants = {
+    primary: 'bg-neon-green text-cyber-black hover:bg-neon-green-dark hover:shadow-neon-lg border-2 border-neon-green',
+    secondary: 'bg-transparent text-neon-green border-2 border-neon-green hover:bg-neon-green hover:text-cyber-black hover:shadow-neon',
+    ghost: 'bg-transparent text-cyber-text hover:text-neon-green border-2 border-cyber-gray hover:border-neon-green'
+};
+
+const sizes = {
+  sm: 'px-4 py-2 text-sm',
+  md: 'px-6 py-3 text-base',
+  lg: 'px-8 py-4 text-lg'
+}
+
+const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`;
+
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag href={href} class={classes}>
+    <slot/>
+</Tag>
+
+<style>
+    a, button {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    a::before, button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(0, 255, 65, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    
+    a:hover::before, button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    a > *, button > * {
+      position: relative;
+      z-index: 1;
+    }
+  </style>

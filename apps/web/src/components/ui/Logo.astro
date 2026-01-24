@@ -1,0 +1,39 @@
+---
+interface Props {
+    size?: 'sm' | 'md' | 'lg';
+}
+
+const {size = 'md'}  = Astro.props;
+
+const sizes = {
+  sm: 'text-xl',
+  md: 'text-2xl',
+  lg: 'text-4xl'
+}
+---
+
+<div class={`flex items-center gap-2 font-mono ${sizes[size]}`}>
+    <span class="text-neon-green font-bold">&lt;|||&gt;</span>
+    <span class="text-white font-bold font-mono">CodeFi</span>
+</div>
+
+<style>
+    div {
+      transition: all 0.3s ease;
+    }
+    
+    div:hover span:first-child {
+      animation: pulse 1s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.8));
+      }
+      50% {
+        opacity: 0.7;
+        filter: drop-shadow(0 0 10px rgba(0, 255, 65, 1));
+      }
+    }
+  </style>

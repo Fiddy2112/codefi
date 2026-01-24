@@ -1,0 +1,162 @@
+---
+import Logo from '../ui/Logo.astro';
+
+const links = {
+  product: [
+    { text: 'Features', href: '#features' },
+    { text: 'Pricing', href: '#pricing' },
+    { text: 'Download', href: '#install' },
+    { text: 'Changelog', href: '/changelog' }
+  ],
+  resources: [
+    { text: 'Documentation', href: '/docs' },
+    { text: 'API Reference', href: '/docs/api' },
+    { text: 'CLI Commands', href: '/docs/cli' },
+    { text: 'GitHub', href: 'https://github.com/yourusername/codefi' }
+  ],
+  company: [
+    { text: 'About', href: '/about' },
+    { text: 'Blog', href: '/blog' },
+    { text: 'Careers', href: '/careers' },
+    { text: 'Contact', href: '/contact' }
+  ],
+  legal: [
+    { text: 'Privacy', href: '/privacy' },
+    { text: 'Terms', href: '/terms' },
+    { text: 'Security', href: '/security' }
+  ]
+};
+
+const social = [
+  { name: 'GitHub', icon: '⚡', href: 'https://github.com/yourusername/codefi' },
+  { name: 'Twitter', icon: '🐦', href: 'https://twitter.com/codefi_dev' },
+  { name: 'Discord', icon: '💬', href: 'https://discord.gg/codefi' }
+];
+---
+
+<footer class="relative bg-cyber-darker border-t border-cyber-gray">
+  <div class="max-w-7xl mx-auto px-4 py-16">
+    
+    <!-- Main Footer Content -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
+      
+      <!-- Brand Column -->
+      <div class="lg:col-span-2">
+        <Logo size="md" />
+        <p class="text-cyber-text text-sm mt-4 leading-relaxed">
+          Brewing beats for your code.<br/>
+          Enter flow state on command.
+        </p>
+        
+        <!-- Social Links -->
+        <div class="flex items-center gap-4 mt-6">
+          {social.map((item) => (
+            <a 
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="w-10 h-10 bg-cyber-black border border-cyber-gray rounded-lg flex items-center justify-center text-lg hover:border-neon-green hover:text-neon-green transition-all"
+              aria-label={item.name}
+            >
+              {item.icon}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <!-- Product Links -->
+      <div>
+        <h4 class="text-white font-bold mb-4 text-sm uppercase tracking-wider">Product</h4>
+        <ul class="space-y-3">
+          {links.product.map((link) => (
+            <li>
+              <a 
+                href={link.href}
+                class="text-cyber-text text-sm hover:text-neon-green transition-colors"
+              >
+                {link.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Resources Links -->
+      <div>
+        <h4 class="text-white font-bold mb-4 text-sm uppercase tracking-wider">Resources</h4>
+        <ul class="space-y-3">
+          {links.resources.map((link) => (
+            <li>
+              <a 
+                href={link.href}
+                class="text-cyber-text text-sm hover:text-neon-green transition-colors"
+                target={link.href.startsWith('http') ? '_blank' : undefined}
+                rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              >
+                {link.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Company Links -->
+      <div>
+        <h4 class="text-white font-bold mb-4 text-sm uppercase tracking-wider">Company</h4>
+        <ul class="space-y-3">
+          {links.company.map((link) => (
+            <li>
+              <a 
+                href={link.href}
+                class="text-cyber-text text-sm hover:text-neon-green transition-colors"
+              >
+                {link.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Legal Links -->
+      <div>
+        <h4 class="text-white font-bold mb-4 text-sm uppercase tracking-wider">Legal</h4>
+        <ul class="space-y-3">
+          {links.legal.map((link) => (
+            <li>
+              <a 
+                href={link.href}
+                class="text-cyber-text text-sm hover:text-neon-green transition-colors"
+              >
+                {link.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="pt-8 border-t border-cyber-gray">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <!-- Copyright -->
+        <p class="text-cyber-text text-sm">
+          © {new Date().getFullYear()} CodeFi. Built with 💚 by developers, for developers.
+        </p>
+
+        <!-- Made with -->
+        <div class="flex items-center gap-2 text-cyber-text text-sm">
+          <span>Made with</span>
+          <span class="text-neon-green">Astro</span>
+          <span>+</span>
+          <span class="text-neon-green">Tailwind</span>
+          <span>+</span>
+          <span class="text-neon-green">Supabase</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Background Decoration -->
+  <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-green to-transparent opacity-50"></div>
+</footer>

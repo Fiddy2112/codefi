@@ -1,0 +1,154 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = 'CodeFi - Brewing beats for your code',
+  description = 'A developer-centric CLI tool designed to help coders enter Flow State. Play Lofi/Synthwave music from terminal with AI mood detection.'
+} = Astro.props;
+
+import Logo from '@/components/ui/Logo.astro';
+import '../styles/global.css';
+import Button from '@/components/ui/Button.astro';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <meta name="generator" content={Astro.generator} />
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <title>{title}</title>
+</head>
+<body class="antialiased">
+  
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-cyber-black/80 backdrop-blur-lg border-b border-cyber-gray">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo -->
+        <a href="/" class="hover:opacity-80 transition-opacity">
+          <Logo size="sm" />
+        </a>
+
+        <!-- Desktop Nav Links -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-cyber-text hover:text-neon-green transition-colors text-sm font-medium">
+            Features
+          </a>
+          <a href="#pricing" class="text-cyber-text hover:text-neon-green transition-colors text-sm font-medium">
+            Pricing
+          </a>
+          <a href="/docs" class="text-cyber-text hover:text-neon-green transition-colors text-sm font-medium">
+            Docs
+          </a>
+          <a href="https://github.com/yourusername/codefi" target="_blank" class="text-cyber-text hover:text-neon-green transition-colors text-sm font-medium">
+            GitHub
+          </a>
+        </div>
+
+        <!-- CTA Button -->
+        <div class="flex items-center gap-4">
+          <Button variant="primary" size="sm">
+            Install CLI
+          </Button>
+          
+          <!-- Mobile Menu Button -->
+          <button 
+            id="mobile-menu-btn"
+            class="md:hidden text-cyber-text hover:text-neon-green p-2"
+            aria-label="Toggle menu"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-cyber-gray mt-2">
+        <div class="flex flex-col gap-4 pt-4">
+          <a href="#features" class="text-cyber-text hover:text-neon-green transition-colors text-sm font-medium">
+            Features
+          </a>
+          <a href="#pricing" class="text-cyber-text hover:text-neon-green transition-colors text-sm font-medium">
+            Pricing
+          </a>
+          <a href="/docs" class="text-cyber-text hover:text-neon-green transition-colors text-sm font-medium">
+            Docs
+          </a>
+          <a href="https://github.com/yourusername/codefi" target="_blank" class="text-cyber-text hover:text-neon-green transition-colors text-sm font-medium">
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="pt-16">
+    <slot />
+  </main>
+
+  <!-- Mobile Menu Script -->
+  <script>
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    
+    btn?.addEventListener('click', () => {
+      menu?.classList.toggle('hidden');
+    });
+
+    // Close menu when clicking links
+    const menuLinks = menu?.querySelectorAll('a');
+    menuLinks?.forEach(link => {
+      link.addEventListener('click', () => {
+        menu?.classList.add('hidden');
+      });
+    });
+  </script>
+
+  <!-- Smooth Scroll -->
+  <script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', (e) => {
+        const target = e.currentTarget;
+        if (!(target instanceof HTMLAnchorElement)) return;
+  
+        const href = target.getAttribute('href');
+        if (!href || href === '#') return;
+  
+        e.preventDefault();
+  
+        const el = document.querySelector(href);
+        if (!(el instanceof HTMLElement)) return;
+  
+        const offsetTop = el.offsetTop - 64;
+        window.scrollTo({
+          top: offsetTop,
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+</html>

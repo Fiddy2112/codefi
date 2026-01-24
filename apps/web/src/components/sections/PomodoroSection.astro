@@ -1,0 +1,131 @@
+---
+
+import Button from '../ui/Button.astro';
+---
+
+<section class="relative py-20 px-4 bg-cyber-black overflow-hidden">
+  
+  <!-- Background Glow -->
+  <div class="absolute top-0 right-0 w-96 h-96 bg-neon-green opacity-5 rounded-full blur-3xl"></div>
+  
+  <div class="max-w-6xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      
+      <!-- Left: Content -->
+      <div class="order-2 lg:order-1">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+          Pomodoro<br/>
+          <span class="neon-text">Analytics</span>
+        </h2>
+        
+        <p class="text-cyber-text text-lg leading-relaxed mb-8">
+          Track your coding sessions with built-in Pomodoro timer. 
+          See your most productive hours, optimize your schedule, 
+          and maintain consistent flow states.
+        </p>
+
+        <ul class="space-y-4 mb-8">
+          <li class="flex items-start gap-3">
+            <span class="text-neon-green text-xl flex-shrink-0">⏱️</span>
+            <div>
+              <h4 class="text-white font-bold mb-1">Smart Timer</h4>
+              <p class="text-cyber-text text-sm">25min work, 5min break. Music auto-pauses during breaks.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-neon-green text-xl flex-shrink-0">📊</span>
+            <div>
+              <h4 class="text-white font-bold mb-1">Session Tracking</h4>
+              <p class="text-cyber-text text-sm">View daily, weekly, monthly productivity patterns.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-neon-green text-xl flex-shrink-0">🎯</span>
+            <div>
+              <h4 class="text-white font-bold mb-1">Goal Setting</h4>
+              <p class="text-cyber-text text-sm">Set daily targets and track your streaks.</p>
+            </div>
+          </li>
+        </ul>
+
+        <Button variant="secondary" size="lg">
+          Learn More →
+        </Button>
+      </div>
+
+      <!-- Right: Visual/Dashboard Mock -->
+      <div class="order-1 lg:order-2">
+        <div class="relative bg-cyber-darker border border-cyber-gray rounded-2xl p-8 shadow-2xl">
+          
+          <!-- Dashboard Header -->
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-white font-bold text-lg">Today's Sessions</h3>
+            <span class="text-neon-green text-sm font-mono">4 / 8 complete</span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="relative h-3 bg-cyber-black rounded-full mb-8 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-neon-green to-neon-green-dark w-1/2 rounded-full animate-pulse-slow"></div>
+          </div>
+
+          <!-- Session List -->
+          <div class="space-y-3 mb-8">
+            <div class="flex items-center gap-3 bg-cyber-black rounded-lg p-3">
+              <span class="text-neon-green text-xl">✓</span>
+              <div class="flex-1">
+                <p class="text-white text-sm font-mono">09:00 - 09:25</p>
+                <p class="text-cyber-text text-xs">Deep Focus</p>
+              </div>
+              <span class="text-neon-green text-xs font-bold">25m</span>
+            </div>
+            <div class="flex items-center gap-3 bg-cyber-black rounded-lg p-3">
+              <span class="text-neon-green text-xl">✓</span>
+              <div class="flex-1">
+                <p class="text-white text-sm font-mono">10:00 - 10:25</p>
+                <p class="text-cyber-text text-xs">Coding Sprint</p>
+              </div>
+              <span class="text-neon-green text-xs font-bold">25m</span>
+            </div>
+            <div class="flex items-center gap-3 bg-cyber-black rounded-lg p-3 opacity-50">
+              <span class="text-cyber-gray text-xl">○</span>
+              <div class="flex-1">
+                <p class="text-cyber-text text-sm font-mono">11:00 - 11:25</p>
+                <p class="text-cyber-text text-xs">Upcoming</p>
+              </div>
+              <span class="text-cyber-gray text-xs font-bold">25m</span>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-3 gap-4 pt-6 border-t border-cyber-gray">
+            <div class="text-center">
+              <p class="text-2xl font-bold text-neon-green">2.5h</p>
+              <p class="text-cyber-text text-xs">Today</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-neon-green">18.5h</p>
+              <p class="text-cyber-text text-xs">This Week</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-bold text-neon-green">7</p>
+              <p class="text-cyber-text text-xs">Streak</p>
+            </div>
+          </div>
+
+          <!-- Glow Effect -->
+          <div class="absolute -inset-1 bg-gradient-to-r from-neon-green/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .neon-text {
+    background: linear-gradient(135deg, #00FF41 0%, #00cc33 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>

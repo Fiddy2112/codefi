@@ -1,0 +1,55 @@
+---
+interface  Props {
+    icon: string;
+    title: string;
+    description: string;
+}
+
+const { icon, title, description } = Astro.props;
+---
+
+<div class="feature-card group bg-cyber-dark border border-cyber-gray rounded-xl p-6 transition-all duration-300 hover:border-neon-green hover:shadow-neon">
+    <div class="flex items-start gap-4">
+      <!-- Icon -->
+      <div class="flex-shrink-0 w-12 h-12 bg-cyber-darker rounded-lg flex items-center justify-center text-neon-green text-2xl group-hover:animate-pulse">
+        {icon}
+      </div>
+      
+      <!-- Content -->
+      <div class="flex-1">
+        <h3 class="text-lg font-bold text-white mb-2 group-hover:text-neon-green transition-colors">
+          {title}
+        </h3>
+        <p class="text-cyber-text text-sm leading-relaxed">
+          {description}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .feature-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 255, 65, 0.1),
+        transparent
+      );
+      transition: left 0.5s;
+    }
+    
+    .feature-card:hover::before {
+      left: 100%;
+    }
+  </style>
