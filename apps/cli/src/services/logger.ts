@@ -98,6 +98,12 @@ export class Logger {
     divider(): void {
         console.log(chalk.hex(COLORS.GRAY)('─'.repeat(50)));
     }
+
+    debug(message: string) {
+        // Chỉ in ra nếu bro muốn, hoặc để màu xám (gray) cho nó chìm
+        // Thêm icon con bọ (bug) cho chuẩn bài debug
+        console.log(chalk.gray(`🐛 [DEBUG] ${message}`));
+    }
 }
 
 export const logger = new Logger();

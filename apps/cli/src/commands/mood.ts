@@ -1,11 +1,11 @@
-import { audioService } from "@/services/audio";
 import { configService } from "@/services/config";
-import { logger } from "@/services/logger";
 import { COLORS, MOODS } from "@/utils/constants";
 import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
 import type { MoodType } from "@/types";
+import { logger } from "@/services/logger";
+import { audioService } from "@/services/audio";
 
 export const moodCommand = new Command('mood').description('Select or change mood').argument('[mood]', 'Mood type (focus, chill, debug, flow, creative)').action(async (moodArg?: string) => {
     try{

@@ -7,9 +7,9 @@ import { Command } from "commander";
 import loginCommand from "@/commands/login";
 import logoutCommand from "@/commands/logout";
 import moodCommand from "@/commands/mood";
-import playCommand from "@/commands/play";
 import pomodoroCommand from "@/commands/pomodoro";
 import stopCommand from "@/commands/stop";
+import playCommand from "@/commands/play";
 
 // Read package.json for version
 const packageJson = require('../package.json');

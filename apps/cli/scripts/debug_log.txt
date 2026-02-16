@@ -1,0 +1,4 @@
+[12:30:05] === BẮT ĐẦU SCRIPT ===
+[12:30:05] Path nhận từ Node: C:\Users\thnhl\.codefi\tracks\midnight-code.mp3
+[12:30:05] Path đã làm sạch: C:\Users\thnhl\.codefi\tracks\midnight-code.mp3
+[12:30:05] -> Thread nghe lệnh đã khởi động.

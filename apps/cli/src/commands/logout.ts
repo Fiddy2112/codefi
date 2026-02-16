@@ -27,7 +27,7 @@ export const logoutCommand = new Command('logout').description('Logout from Code
         }
 
         configService.logout();
-        
+
         logger.newLine();
         logger.success('Successfully logged out');
         logger.newLine();

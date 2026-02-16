@@ -1,3 +1,4 @@
+audioService
 import { audioService } from "@/services/audio";
 import { logger } from "@/services/logger";
 import { Command } from "commander";
