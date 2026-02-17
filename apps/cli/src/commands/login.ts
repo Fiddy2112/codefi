@@ -1,92 +1,43 @@
-import { configService } from "@/services/config";
-import { logger } from "@/services/logger";
-import { Command } from "commander";
-import inquirer from "inquirer";
+import { Command } from 'commander'
+import http from 'http'
+import open from 'open'
+import { URL } from 'url'
+import Conf from 'conf'
+import dotenv from 'dotenv'
 
-export const loginCommand = new Command('login').description('Login to CodeFi Pro').action(async ()=>{
-    try{
-        logger.clear();
-        logger.box('LOGIN TO CODEFI PRO');
-        logger.newLine();
+dotenv.config()
 
-        if(configService.isLoggedIn()){
-            const userId = configService.get('userId');
-            logger.warning(`Already logged in as: ${userId}`);
-            logger.info('Use "codefi logout" to logout first');
-            return;
-        }
+const config = new Conf({ projectName: 'codefi' })
+const PORT = 43721
+const LOGIN_URL = process.env.CLI_LOGIN_URL || 'https://codefi.app/cli-login'
 
-        logger.info('Enter your CodeFi Pro credentials');
-        logger.newLine();
+async function login() {
+  const server = http.createServer((req, res) => {
+    if (!req.url) return
 
-        const answers = await inquirer.prompt([
-            {
-                type: 'input',
-                name: 'email',
-                message: 'Email:',
-                validate: (input) => {
-                  if (!input.includes('@')) {
-                    return 'Please enter a valid email';
-                  }
-                  return true;
-                },
-            },
-            {
-                type: 'password',
-                name: 'password',
-                message: 'Password:',
-                mask: '*',
-                validate: (input) => {
-                  if (input.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return true;
-                },
-            },
-        ]);
+    const url = new URL(req.url, `http://localhost:${PORT}`)
+    const token = url.searchParams.get('access_token')
 
-        const spinner = logger.spinner('Authenticating...');
-        spinner.start();
+    if (url.pathname === '/callback' && token) {
+      config.set('token', token)
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end('Login successful. You can close this tab.')
 
-        const mockUserId = answers.email.split('0')[0];
-        const mockToken = 'mock_jwt_token' + Date.now();
-        const isPro = true;
-
-        spinner.success('Authentication successful!');
-        logger.newLine();
-
-        configService.login(mockUserId, mockToken, isPro);
-
-        logger.success(`Welcome back, ${mockUserId}`);
-        logger.newLine();
-
-        if(isPro){
-            logger.neon('✨ CodeFi Pro activated!');
-            logger.newLine();
-            logger.info('You now have access to:');
-            logger.info('  • 100+ curated tracks');
-            logger.info('  • Spotify integration');
-            logger.info('  • AI mood detection');
-            logger.info('  • Pomodoro timer');
-            logger.info('  • Custom playlists');
-            logger.info('  • Cross-device sync');
-        }
-
-        
-        logger.newLine();
-        logger.divider();
-        logger.info('Run "codefi play" to start coding with Pro features!');
-        logger.divider();
-
-    }catch(error){
-      logger.error('Login failed', error as Error);
-      logger.newLine();
-      logger.info('Need a Pro account?');
-      logger.info('Sign up at: https://codefi.dev/pricing');
-      process.exit(1);
+      console.log('✅ Logged in successfully!')
+      server.close()
     }
-})
+  })
 
-export default loginCommand;
+  server.listen(PORT, async () => {
+    const loginUrl = `${LOGIN_URL}?redirect=http://localhost:${PORT}/callback`
+    await open(loginUrl)
+    console.log('🌐 Opening browser for login...')
+  })
+}
+
+const loginCommand = new Command('login')
+  .description('Login to your Codefi Pro account')
+  .action(login)
+
+export default loginCommand
