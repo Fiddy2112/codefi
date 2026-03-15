@@ -2,81 +2,241 @@
 import Layout from "@/layouts/Layout.astro";
 ---
 
-<script type="module">
-  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+<Layout title="Codefi CLI Login">
+  <section class="relative min-h-screen flex items-center justify-center px-4 bg-cyber-black">
+    <div class="w-full max-w-md">
 
-  const supabase = createClient(
-    import.meta.env.PUBLIC_SUPABASE_URL,
-    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  );
+      <!-- Header -->
+      <div class="text-center mb-10">
+        <h1 class="text-4xl font-bold text-white mb-3">
+          Connect Your<br />
+          <span class="neon-text">Codefi CLI</span>
+        </h1>
+        <p class="text-cyber-text text-sm">
+          Authenticate to unlock Pro features in your terminal.
+        </p>
+      </div>
 
-  const params = new URLSearchParams(window.location.search);
-  const redirectBase = params.get("redirect");      // http://localhost:43721/callback
-  const codeChallenge = params.get("code_challenge");
-  const state = params.get("state");
-  const errorEl = document.getElementById("error");
+      <!-- Card -->
+      <div class="bg-neutral-900/60 backdrop-blur border border-neutral-800 rounded-2xl p-8 shadow-xl space-y-6">
 
-  if (!redirectBase || !state) {
-    document.body.innerHTML = `<p style="color:white;text-align:center;margin-top:50px">
-      Missing required parameters. Please run <code>codefi login</code> again.
-    </p>`;
-    throw new Error("Missing params");
-  }
+        <!-- OAuth Buttons -->
+        <div class="space-y-3">
+          <button
+            id="google-login"
+            data-label="Continue with Google"
+            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Continue with Google
+          </button>
 
-  // if got session after OAuth redirect → forward to CLI
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (sessionData.session) {
+          <button
+            id="github-login"
+            data-label="Continue with GitHub"
+            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Continue with GitHub
+          </button>
+        </div>
 
-    const urlCode = new URLSearchParams(window.location.search).get('code');
-    if (urlCode) {
-      window.location.href = `${redirectBase}?code=${urlCode}&state=${state}`;
-      return;
+        <!-- Divider -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1 h-px bg-neutral-800"></div>
+          <span class="text-xs text-cyber-text font-mono">OR</span>
+          <div class="flex-1 h-px bg-neutral-800"></div>
+        </div>
+
+        <!-- Email Login -->
+        <form id="login-form" class="space-y-4">
+          <input
+            type="email"
+            id="email"
+            placeholder="Email"
+            required
+            autocomplete="email"
+            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white"
+          />
+          <input
+            type="password"
+            id="password"
+            placeholder="Password"
+            required
+            autocomplete="current-password"
+            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white"
+          />
+          <button
+            type="submit"
+            id="submit-btn"
+            data-label="Login with Email"
+            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Login with Email
+          </button>
+        </form>
+
+        <p id="error" class="text-red-400 text-sm hidden font-mono"></p>
+        <p id="info"  class="text-green-400 text-sm hidden font-mono"></p>
+
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .neon-text {
+      background: linear-gradient(135deg, #00FF41 0%, #00cc33 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-  }
+  </style>
 
-  function showError(msg) {
-    errorEl.textContent = msg;
-    errorEl.classList.remove("hidden");
-  }
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  // Email login
-  document.getElementById("login-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    errorEl.classList.add("hidden");
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) return showError(error.message);
-    if (!data.session) return showError("Login failed: no session");
-
-    const { data: pkceData, error: pkceError } = await supabase.auth.exchangeCodeForSession(
-      data.session.access_token
+    const supabase = createClient(
+      import.meta.env.PUBLIC_SUPABASE_URL,
+      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
 
-    window.location.href = `${redirectBase}?code=${data.session.access_token}&state=${state}`;
-  });
+    // ── Read params from URL ───────────────────────────────────────────────────
+    const params       = new URLSearchParams(window.location.search);
+    const redirectBase = params.get("redirect");  // http://localhost:43721/callback
+    const state        = params.get("state");
+    const errorEl      = document.getElementById("error");
+    const infoEl       = document.getElementById("info");
 
-  document.getElementById("google-login").addEventListener("click", async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.href,
-        queryParams: { code_challenge: codeChallenge, code_challenge_method: 'S256' }
+    // Validate required params
+    if (!redirectBase || !state) {
+      document.querySelector('section').innerHTML = `
+        <div style="color:white;text-align:center;padding:80px 24px;font-family:monospace">
+          <div style="font-size:48px;color:#ff4444">✗</div>
+          <div style="font-size:20px;margin-top:16px">Missing parameters</div>
+          <div style="color:#888;margin-top:8px">Please run <code style="color:#00FF41">codefi login</code> again.</div>
+        </div>`;
+      throw new Error("Missing redirect or state param");
+    }
+
+    // ── Forward token to CLI ───────────────────────────────────────────────────
+    function forwardToCLI(accessToken, refreshToken) {
+      showInfo("Redirecting back to terminal...");
+
+      const url = new URL(redirectBase);
+      url.searchParams.set("access_token",  accessToken);
+      url.searchParams.set("refresh_token", refreshToken || "");
+      url.searchParams.set("state",         state);
+
+      // Small delay so user sees the info message
+      setTimeout(() => { window.location.href = url.toString(); }, 400);
+    }
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.classList.remove("hidden");
+      infoEl.classList.add("hidden");
+    }
+
+    function showInfo(msg) {
+      infoEl.textContent = msg;
+      infoEl.classList.remove("hidden");
+      errorEl.classList.add("hidden");
+    }
+
+    function setLoading(btn, loading) {
+      btn.disabled = loading;
+      btn.textContent = loading ? "Loading..." : btn.dataset.label;
+    }
+
+    // ── Check if returning from OAuth redirect ─────────────────────────────────
+    // Supabase puts tokens in URL hash after OAuth: #access_token=...&refresh_token=...
+    // This page is set as redirectTo, so we'll land here after Google/GitHub login.
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const hashToken   = hash.get("access_token");
+    const hashRefresh = hash.get("refresh_token");
+
+    if (hashToken) {
+      // OAuth login came back with token in hash → forward to CLI immediately
+      forwardToCLI(hashToken, hashRefresh || "");
+    } else {
+      // Also check if Supabase already has an active session (e.g. page reload)
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.access_token) {
+        forwardToCLI(
+          sessionData.session.access_token,
+          sessionData.session.refresh_token
+        );
+      }
+    }
+
+    // ── Email / password login ─────────────────────────────────────────────────
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorEl.classList.add("hidden");
+
+      const submitBtn = document.getElementById("submit-btn");
+      setLoading(submitBtn, true);
+
+      const email    = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        setLoading(submitBtn, false);
+        return showError(error.message);
+      }
+
+      if (!data.session?.access_token) {
+        setLoading(submitBtn, false);
+        return showError("Login failed: no session returned. Please try again.");
+      }
+
+      // Forward directly — no PKCE exchange needed for password flow
+      forwardToCLI(data.session.access_token, data.session.refresh_token);
+    });
+
+    // ── Google OAuth ───────────────────────────────────────────────────────────
+    document.getElementById("google-login").addEventListener("click", async () => {
+      const googleBtn = document.getElementById("google-login");
+      setLoading(googleBtn, true);
+
+      // redirectTo = this same page (with same state param)
+      // After Google auth, Supabase redirects back here with #access_token in hash
+      const redirectTo = window.location.href;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          scopes: "email profile",
+        }
+      });
+
+      if (error) {
+        setLoading(googleBtn, false);
+        showError(error.message);
+      }
+      // If no error, browser is being redirected — button stays loading
+    });
+
+    // ── GitHub OAuth ───────────────────────────────────────────────────────────
+    document.getElementById("github-login").addEventListener("click", async () => {
+      const githubBtn = document.getElementById("github-login");
+      setLoading(githubBtn, true);
+
+      const redirectTo = window.location.href;
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo,
+          scopes: "user:email",
+        }
+      });
+
+      if (error) {
+        setLoading(githubBtn, false);
+        showError(error.message);
       }
     });
-  });
-
-  // GitHub OAuth
-  document.getElementById("github-login").addEventListener("click", async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: window.location.href,
-        queryParams: { code_challenge: codeChallenge, code_challenge_method: 'S256' }
-      }
-    });
-  });
-</script>
+  </script>
+</Layout>
