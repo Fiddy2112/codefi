@@ -1,0 +1,57 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout title="Configuration | CodeFi Docs">
+  <div slot="header">
+    <div class="text-neon-green font-mono text-sm mb-2">/ CLI REFERENCE</div>
+    <h1 class="text-4xl font-bold text-white">Configuration</h1>
+  </div>
+
+  <p>Customize how CodeFi behaves by modifying your global configuration.</p>
+
+  <h2>Config File Location</h2>
+  <p>CodeFi stores its configuration in a YAML file located at:</p>
+  <ul>
+    <li><strong>Windows:</strong> <code>%USERPROFILE%\.codefi\config.yaml</code></li>
+    <li><strong>macOS/Linux:</strong> <code>~/.codefi/config.yaml</code></li>
+  </ul>
+
+  <h2>Managing via CLI</h2>
+  <p>You can view and update settings directly from the terminal:</p>
+  <pre><code>codefi config list</code></pre>
+  <pre><code>codefi config set theme dark</code></pre>
+
+  <h2>Available Options</h2>
+  <table class="w-full text-left text-sm text-cyber-text border-collapse">
+    <thead>
+      <tr class="border-b border-cyber-gray">
+        <th class="py-2 font-bold text-white uppercase tracking-wider">Option</th>
+        <th class="py-2 font-bold text-white uppercase tracking-wider">Default</th>
+        <th class="py-2 font-bold text-white uppercase tracking-wider">Description</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-cyber-gray">
+      <tr>
+        <td class="py-3 font-mono">theme</td>
+        <td class="py-3">cyber</td>
+        <td class="py-3">Visual theme for terminal UI.</td>
+      </tr>
+      <tr>
+        <td class="py-3 font-mono">audio_engine</td>
+        <td class="py-3">pygame</td>
+        <td class="py-3">Backend driver for audio playback.</td>
+      </tr>
+      <tr>
+        <td class="py-3 font-mono">auto_pause</td>
+        <td class="py-3">true</td>
+        <td class="py-3">Pause music on Pomodoro breaks.</td>
+      </tr>
+      <tr>
+        <td class="py-3 font-mono">ai_detection</td>
+        <td class="py-3">false</td>
+        <td class="py-3">Enable AI-powered mood analysis (Pro).</td>
+      </tr>
+    </tbody>
+  </table>
+</DocsLayout>

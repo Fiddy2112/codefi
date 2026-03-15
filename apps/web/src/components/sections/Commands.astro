@@ -1,0 +1,107 @@
+---
+const categories = [
+  {
+    name: 'Playback',
+    commands: [
+      { cmd: 'play', desc: 'Start the beats. Supports --mood, --genre, --youtube, --ai-mood.' },
+      { cmd: 'stop', desc: 'Stop playback immediately.' },
+      { cmd: 'status', desc: 'What\'s playing now? mini visualizer included.' },
+      { cmd: 'volume', desc: 'Set level (0-100) or adjust (+10, -5).' },
+      { cmd: 'queue', desc: 'Manage upcoming tracks & YouTube URLs.' },
+      { cmd: 'sleep', desc: 'Set a sleep timer to auto-stop music.' },
+    ]
+  },
+  {
+    name: 'Library & Flow',
+    commands: [
+      { cmd: 'mood', desc: 'Interactively switch your vibe.' },
+      { cmd: 'playlist', desc: 'Browse, create, or play your collections.' },
+      { cmd: 'history', desc: 'Your recently played tracks & stats.' },
+      { cmd: 'spotify', desc: 'Connect & control Spotify (Pro).' },
+      { cmd: 'pomodoro', desc: 'Focus timer with integrated music (Pro).' },
+    ]
+  },
+  {
+    name: 'System & Tools',
+    commands: [
+      { cmd: 'config', desc: 'Tune your CLI preferences.' },
+      { cmd: 'alias', desc: 'Create custom shorthand commands.' },
+      { cmd: 'share', desc: 'Copy now-playing info to clipboard.' },
+      { cmd: 'doctor', desc: 'Health check for your environment.' },
+      { cmd: 'login', desc: 'Sync your account & Pro features.' },
+    ]
+  }
+];
+---
+
+<section id="commands" class="py-24 px-4 bg-cyber-black relative overflow-hidden">
+  <!-- Subtle scanline effect -->
+  <div class="absolute inset-0 pointer-events-none opacity-5 bg-scanlines"></div>
+
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+        Master The <span class="neon-text">Terminal</span>
+      </h2>
+      <p class="text-cyber-text text-lg max-w-2xl mx-auto">
+        Complete control over your coding soundtrack via simple, powerful commands.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {categories.map((cat) => (
+        <div class="command-group p-6 rounded-2xl bg-cyber-darker border border-cyber-gray hover:border-neon-green transition-colors duration-500">
+          <h3 class="text-xl font-bold text-neon-green mb-6 font-mono tracking-wider uppercase">
+            // {cat.name}
+          </h3>
+          <ul class="space-y-6">
+            {cat.commands.map((c) => (
+              <li class="group">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-white font-mono font-bold group-hover:text-neon-green transition-colors">
+                    > codefi {c.cmd}
+                  </span>
+                </div>
+                <p class="text-cyber-text text-sm leading-relaxed ml-4 border-l border-cyber-gray pl-4">
+                  {c.desc}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <!-- Interactive Hint -->
+    <div class="mt-16 p-6 rounded-xl bg-neon-green/5 border border-neon-green/20 text-center">
+      <p class="text-neon-green font-mono text-sm">
+        <span class="animate-pulse">_</span> Type <code class="bg-neon-green/10 px-2 py-1 rounded text-white">codefi --help</code> anywhere for the full manual.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .bg-scanlines {
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(0, 0, 0, 0.5) 51%,
+      rgba(0, 0, 0, 0.5)
+    );
+    background-size: 100% 4px;
+  }
+
+  .neon-text {
+    color: #00FF41;
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+  }
+
+  .command-group {
+    box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.5);
+  }
+
+  .command-group:hover {
+    box-shadow: 0 0 30px -10px rgba(0, 255, 65, 0.15);
+  }
+</style>

@@ -1,109 +1,108 @@
 import { COLORS, MESSAGES } from "@/utils/constants";
 import chalk from "chalk";
-import { time } from "console";
+import inquirer from "inquirer";
 
 export class Logger {
-    private prefix: string;
+  private prefix: string;
 
-    constructor(prefix:string = "CodeFi"){
-        this.prefix = prefix;
-    }
+  constructor(prefix: string = "CodeFi") {
+    this.prefix = prefix;
+  }
 
-    private formatMessage(level:string, message:string):string{
-        const timestamp = new Date().toLocaleTimeString();
-        return `[${timestamp}] [${level}] ${message}`;
-    }
+  success(message: string): void {
+    console.log(chalk.hex(COLORS.SUCCESS)(`${MESSAGES.SUCCESS} ${message}`));
+  }
 
-    success(message:string):void{
-        console.log(chalk.hex(COLORS.SUCCESS)(`${MESSAGES.SUCCESS} ${message}`));
+  error(message: string, error?: Error): void {
+    console.error(chalk.hex(COLORS.ERROR)(`${MESSAGES.ERROR} ${message}`));
+    if (error && process.env.NODE_ENV === "development") {
+      console.error(chalk.gray(error.stack));
     }
+  }
 
-    error(message: string, error?: Error): void {
-        console.error(
-          chalk.hex(COLORS.ERROR)(`${MESSAGES.ERROR} ${message}`)
-        );
-        if (error && process.env.NODE_ENV === 'development') {
-          console.error(chalk.gray(error.stack));
-        }
-    }
+  // was using MESSAGES.ERROR instead of MESSAGES.WARNING
+  warning(message: string): void {
+    console.warn(chalk.hex(COLORS.WARNING)(`${MESSAGES.WARNING} ${message}`));
+  }
 
-    warning(message:string):void{
-        console.warn(chalk.hex(COLORS.WARNING)(`${MESSAGES.ERROR} ${message}`));
-    }
+  info(message: string): void {
+    console.log(chalk.hex(COLORS.TEXT)(`${MESSAGES.INFO} ${message}`));
+  }
 
-    info(message: string): void {
-        console.log(
-          chalk.hex(COLORS.TEXT)(`${MESSAGES.INFO} ${message}`)
-        );
-      }
-    
-    neon(message: string): void {
-        console.log(chalk.hex(COLORS.PRIMARY).bold(message));
-    }
+  neon(message: string): void {
+    console.log(chalk.hex(COLORS.PRIMARY).bold(message));
+  }
 
-    box(message:string):void{
-        const lines = message.split('\n');
-        const maxLength = Math.max(...lines.map(l => l.length));
-        const border = '='.repeat(maxLength + 4);
+  box(message: string): void {
+    const lines = message.split("\n");
+    const maxLength = Math.max(...lines.map((l) => l.length));
+    const border = "=".repeat(maxLength + 4);
 
-        console.log(chalk.hex(COLORS.PRIMARY)(`╔${border}╗`));
-        lines.forEach(line =>{
-            const padding = ' '.repeat(maxLength - line.length);
-            console.log(chalk.hex(COLORS.PRIMARY)(`║  ${line}${padding}  ║`));
-        });
-        console.log(chalk.hex(COLORS.PRIMARY)(`╚${border}╝`));
-    }
+    console.log(chalk.hex(COLORS.PRIMARY)(`╔${border}╗`));
+    lines.forEach((line) => {
+      const padding = " ".repeat(maxLength - line.length);
+      console.log(chalk.hex(COLORS.PRIMARY)(`║  ${line}${padding}  ║`));
+    });
+    console.log(chalk.hex(COLORS.PRIMARY)(`╚${border}╝`));
+  }
 
-    welcome(): void {
-        console.log(chalk.hex(COLORS.PRIMARY)(MESSAGES.WELCOME));
-    }
+  welcome(): void {
+    console.log(chalk.hex(COLORS.PRIMARY)(MESSAGES.WELCOME));
+  }
 
-    nowPlaying(trackTitle: string, artist: string): void {
-        console.log(
-          chalk.hex(COLORS.TEXT)(`${MESSAGES.MUSIC_PLAYING} `) +
-          chalk.hex(COLORS.PRIMARY).bold(trackTitle) +
-          chalk.hex(COLORS.TEXT)(` by ${artist}`)
-        );
-    }
+  nowPlaying(trackTitle: string, artist: string): void {
+    console.log(
+      chalk.hex(COLORS.TEXT)(`${MESSAGES.MUSIC_PLAYING} `) +
+        chalk.hex(COLORS.PRIMARY).bold(trackTitle) +
+        chalk.hex(COLORS.TEXT)(` by ${artist}`)
+    );
+  }
 
-    flowActivated(): void {
-        console.log(chalk.hex(COLORS.PRIMARY).bold(MESSAGES.FLOW_ACTIVATED));
-    }
+  flowActivated(): void {
+    console.log(chalk.hex(COLORS.PRIMARY).bold(MESSAGES.FLOW_ACTIVATED));
+  }
 
-    proRequired(): void {
-        this.warning(MESSAGES.PRO_REQUIRED);
-        console.log(
-          chalk.hex(COLORS.TEXT)('Upgrade: ') +
-          chalk.hex(COLORS.PRIMARY).underline('https://codefi.dev/pricing')
-        );
-      }
-    
-    spinner(text: string): any {
-        const ora = require('ora');
-        return ora({
-          text,
-          color: 'green',
-          spinner: 'dots',
-        });
-    }
-    
-    clear(): void {
-        console.clear();
-    }
-    
-    newLine(): void {
-        console.log('');
-    }
-    
-    divider(): void {
-        console.log(chalk.hex(COLORS.GRAY)('─'.repeat(50)));
-    }
+  proRequired(): void {
+    this.warning(MESSAGES.PRO_REQUIRED);
+    console.log(
+      chalk.hex(COLORS.TEXT)("Upgrade: ") +
+        chalk.hex(COLORS.PRIMARY).underline("https://codefi.dev/pricing")
+    );
+  }
 
-    debug(message: string) {
-        // Chỉ in ra nếu bro muốn, hoặc để màu xám (gray) cho nó chìm
-        // Thêm icon con bọ (bug) cho chuẩn bài debug
-        console.log(chalk.gray(`🐛 [DEBUG] ${message}`));
-    }
+  spinner(text: string): any {
+    const ora = require("ora");
+    return ora({ text, color: "green", spinner: "dots" });
+  }
+
+  clear(): void {
+    console.clear();
+  }
+
+  newLine(): void {
+    console.log("");
+  }
+
+  divider(): void {
+    console.log(chalk.hex(COLORS.GRAY)("─".repeat(50)));
+  }
+
+  debug(message: string): void {
+    console.log(chalk.gray(`🐛 [DEBUG] ${message}`));
+  }
+
+  // was missing — youtube.ts calls logger.confirm()
+  async confirm(message: string, defaultValue = false): Promise<boolean> {
+    const { answer } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "answer",
+        message,
+        default: defaultValue,
+      },
+    ]);
+    return answer;
+  }
 }
 
 export const logger = new Logger();

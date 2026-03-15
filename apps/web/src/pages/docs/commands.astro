@@ -1,0 +1,50 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout title="Commands Reference | CodeFi Docs">
+  <div slot="header">
+    <div class="text-neon-green font-mono text-sm mb-2">/ CLI REFERENCE</div>
+    <h1 class="text-4xl font-bold text-white">Commands Overview</h1>
+  </div>
+
+  <p>CodeFi uses a highly intuitive command structure. Most commands follow the pattern <code>codefi [action] [options]</code>.</p>
+
+  <h2>Playback Commands</h2>
+  
+  <h3><code>play</code></h3>
+  <p>Standard playback command. Without flags, it resumes your last session.</p>
+  <ul>
+    <li><code>--mood [name]</code>: Play tracks matching a specific mood (focus, chill, synth, dark).</li>
+    <li><code>--youtube [url]</code>: Play audio directly from a YouTube URL.</li>
+    <li><code>--ai-mood</code>: Automatically detect mood based on current activity (Pro).</li>
+  </ul>
+
+  <h3><code>stop</code></h3>
+  <p>Stops all active audio streams and clears terminal status.</p>
+
+  <h3><code>status</code></h3>
+  <p>Shows the current track, artist, progress, and a mini terminal visualizer.</p>
+
+  <h2>Library Management</h2>
+
+  <h3><code>history</code></h3>
+  <p>View your top tracks and recent session history.</p>
+  <pre><code>$ codefi history --stats</code></pre>
+
+  <h3><code>playlist</code></h3>
+  <p>Interact with your personal collections.</p>
+  <ul>
+    <li><code>list</code>: Show all available playlists.</li>
+    <li><code>create [name]</code>: Initialize a new collection (Pro).</li>
+    <li><code>play [name]</code>: Start playback from a specific playlist.</li>
+  </ul>
+
+  <h2>Productivity Tools</h2>
+
+  <h3><code>pomodoro</code></h3>
+  <p>Control the integrated Pomodoro timer.</p>
+  <pre><code>$ codefi pomodoro start</code></pre>
+  <p><strong>Note:</strong> During a break, CodeFi will automatically dim or pause the music depending on your config settings.</p>
+
+</DocsLayout>

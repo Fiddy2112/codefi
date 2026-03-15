@@ -1,4 +1,6 @@
-[12:30:05] === BẮT ĐẦU SCRIPT ===
-[12:30:05] Path nhận từ Node: C:\Users\thnhl\.codefi\tracks\midnight-code.mp3
-[12:30:05] Path đã làm sạch: C:\Users\thnhl\.codefi\tracks\midnight-code.mp3
-[12:30:05] -> Thread nghe lệnh đã khởi động.
+[17:21:23] === BẮT ĐẦU SCRIPT ===
+[17:21:23] Path nhận từ Node: C:\Users\thnhl\.codefi\tracks\in-the-zone.mp3
+[17:21:23] Path đã làm sạch: C:\Users\thnhl\.codefi\tracks\in-the-zone.mp3
+[17:21:23] -> Thread nghe lệnh đã khởi động.
+[17:21:27] -> Nhận lệnh: STOP
+[17:21:27] -> Nhận lệnh STOP. Thoát.

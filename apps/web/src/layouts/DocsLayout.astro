@@ -1,0 +1,92 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Logo from '@/components/ui/Logo.astro';
+
+
+interface Props {
+  title?: string;
+}
+
+const { title = 'Documentation | CodeFi' } = Astro.props;
+
+const docSections = [
+  {
+    title: 'Getting Started',
+    links: [
+      { text: 'Installation', href: '/docs/installation' },
+      { text: 'Quick Start', href: '/docs/quick-start' },
+      { text: 'Core Concepts', href: '/docs/concepts' },
+    ]
+  },
+  {
+    title: 'CLI Reference',
+    links: [
+      { text: 'Commands Overview', href: '/docs/commands' },
+      { text: 'Configuration', href: '/docs/config' },
+      { text: 'Aliases & Keybinds', href: '/docs/customization' },
+    ]
+  },
+  {
+    title: 'Pro Features',
+    links: [
+      { text: 'AI Mood Analysis', href: '/docs/ai-mood' },
+      { text: 'Spotify Sync', href: '/docs/spotify' },
+      { text: 'Advanced Analytics', href: '/docs/analytics' },
+    ]
+  }
+];
+---
+
+<BaseLayout title={title}>
+  <div class="max-w-7xl mx-auto px-4 py-12">
+    <div class="flex flex-col lg:flex-row gap-12">
+      
+      <!-- Sidebar -->
+      <aside class="lg:w-64 flex-shrink-0">
+        <nav class="sticky top-24 space-y-8">
+          {docSections.map(section => (
+            <div>
+              <h5 class="text-white font-bold text-xs uppercase tracking-widest mb-4 border-b border-cyber-gray pb-2">
+                {section.title}
+              </h5>
+              <ul class="space-y-2">
+                {section.links.map(link => (
+                  <li>
+                    <a 
+                      href={link.href}
+                      class="text-cyber-text hover:text-neon-green transition-colors text-sm font-mono flex items-center gap-2 group"
+                    >
+                      <span class="opacity-0 group-hover:opacity-100 transition-opacity">>></span>
+                      {link.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
+      </aside>
+
+      <!-- Content -->
+      <article class="flex-1 max-w-3xl prose prose-invert prose-neon">
+        <div class="mb-12">
+           <slot name="header" />
+        </div>
+        <div class="doc-content">
+          <slot />
+        </div>
+      </article>
+
+    </div>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  .prose-neon h1 { @apply text-white text-4xl font-bold mb-8; }
+  .prose-neon h2 { @apply text-white text-2xl font-bold mt-12 mb-4 border-b border-cyber-gray pb-2; }
+  .prose-neon p { @apply text-cyber-text leading-relaxed mb-6; }
+  .prose-neon code { @apply bg-cyber-darker px-1.5 py-0.5 rounded text-neon-green font-mono text-sm; }
+  .prose-neon pre { @apply bg-cyber-darker p-4 rounded-xl border border-cyber-gray mb-8 overflow-x-auto; }
+  .prose-neon ul { @apply space-y-2 mb-6 list-disc list-inside text-cyber-text; }
+  .prose-neon strong { @apply text-white font-bold; }
+</style>

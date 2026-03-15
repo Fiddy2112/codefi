@@ -8,7 +8,8 @@
   }
   
   body {
-    @apply bg-cyber-black text-cyber-text font-mono;
+    @apply bg-cyber-black text-cyber-text font-mono selection:bg-neon-green/30 selection:text-white;
+    background-color: #0E1117;
   }
 
   /* Custom scrollbar */

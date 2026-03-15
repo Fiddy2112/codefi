@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PricingSection from '@/components/sections/Pricing.astro';
+import Footer from '@/components/sections/Footer.astro';
+---
+
+<BaseLayout title="Pricing | CodeFi - Elevate Your Flow">
+  <section class="pt-32 pb-12 px-4">
+    <div class="max-w-7xl mx-auto text-center">
+      <h1 class="text-5xl md:text-6xl font-bold text-white mb-6">
+        Simple <span class="text-neon-green">Pro</span> Subscriptions
+      </h1>
+      <p class="text-cyber-text text-xl max-w-2xl mx-auto">
+        Unlock AI mood detection, Spotify integration, and deep session analytics.
+      </p>
+    </div>
+  </section>
+
+  <PricingSection />
+
+  <section class="py-20 px-4 bg-cyber-darker/20">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl font-bold text-white mb-12 italic opacity-80">
+        "The AI mood detection alone saved my sanity during a 12-hour refactor."
+      </h2>
+      <div class="flex items-center justify-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-neon-green/20 border border-neon-green/50"></div>
+        <div class="text-left">
+          <p class="text-white font-bold">@alex_dev</p>
+          <p class="text-cyber-text text-sm">Lead Engineer @ CyberSystems</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>

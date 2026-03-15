@@ -2,220 +2,81 @@
 import Layout from "@/layouts/Layout.astro";
 ---
 
-<Layout title="Codefi CLI Login">
-  <section class="relative min-h-screen flex items-center justify-center px-4 bg-cyber-black">
-    <div class="w-full max-w-md">
-  
-      <!-- Header -->
-      <div class="text-center mb-10">
-        <h1 class="text-4xl font-bold text-white mb-3">
-          Connect Your<br />
-          <span class="neon-text">Codefi CLI</span>
-        </h1>
-        <p class="text-cyber-text text-sm">
-          Authenticate to unlock Pro features in your terminal.
-        </p>
-      </div>
-  
-      <!-- Card -->
-      <div class="bg-neutral-900/60 backdrop-blur border border-neutral-800 rounded-2xl p-8 shadow-xl space-y-6">
-  
-        <!-- OAuth Buttons -->
-        <div class="space-y-3">
-  
-          <button
-            id="google-login"
-            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200"
-          >
-            Continue with Google
-          </button>
-  
-          <button
-            id="github-login"
-            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200"
-          >
-            Continue with GitHub
-          </button>
-  
-        </div>
-  
-        <!-- Divider -->
-        <div class="flex items-center gap-3">
-          <div class="flex-1 h-px bg-neutral-800"></div>
-          <span class="text-xs text-cyber-text font-mono">OR</span>
-          <div class="flex-1 h-px bg-neutral-800"></div>
-        </div>
-  
-        <!-- Email Login -->
-        <form id="login-form" class="space-y-4">
-          <input
-            type="email"
-            id="email"
-            placeholder="Email"
-            required
-            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white"
-          />
-  
-          <input
-            type="password"
-            id="password"
-            placeholder="Password"
-            required
-            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white"
-          />
-  
-          <button
-            type="submit"
-            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200"
-          >
-            Login with Email
-          </button>
-        </form>
-  
-        <p id="error" class="text-red-400 text-sm hidden font-mono"></p>
-  
-      </div>
-    </div>
-  
-    <script type="module">
-      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-   
-      const supabase = createClient(
-        import.meta.env.PUBLIC_SUPABASE_URL,
-        import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-      );
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-      const params = new URLSearchParams(window.location.search);
-      const redirect = params.get("redirect");
-      const errorEl = document.getElementById("error");
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  );
 
-      if (!redirect) {
-        document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px'>Missing redirect parameter</h1>";
-        throw new Error("No redirect param");
-      }
+  const params = new URLSearchParams(window.location.search);
+  const redirectBase = params.get("redirect");      // http://localhost:43721/callback
+  const codeChallenge = params.get("code_challenge");
+  const state = params.get("state");
+  const errorEl = document.getElementById("error");
 
-      async function redirectToCli(token) {
-        window.location.href = `${redirect}?access_token=${token}`;
-      }
+  if (!redirectBase || !state) {
+    document.body.innerHTML = `<p style="color:white;text-align:center;margin-top:50px">
+      Missing required parameters. Please run <code>codefi login</code> again.
+    </p>`;
+    throw new Error("Missing params");
+  }
 
-      // Check for existing session (after OAuth redirect)
-      const { data: sessionData } = await supabase.auth.getSession();
+  // if got session after OAuth redirect → forward to CLI
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (sessionData.session) {
 
-      if (sessionData.session) {
-        await redirectToCli(sessionData.session.access_token);
-        return;
-      }
+    const urlCode = new URLSearchParams(window.location.search).get('code');
+    if (urlCode) {
+      window.location.href = `${redirectBase}?code=${urlCode}&state=${state}`;
+      return;
+    }
+  }
 
-      // Email login
-      document.getElementById("login-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.classList.remove("hidden");
+  }
 
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
+  // Email login
+  document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorEl.classList.add("hidden");
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-        if (error) {
-          errorEl.textContent = error.message;
-          errorEl.classList.remove("hidden");
-          return;
-        }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-        const token = data.session?.access_token;
-        await redirectToCli(token);
-      });
+    if (error) return showError(error.message);
+    if (!data.session) return showError("Login failed: no session");
 
-      // Google OAuth
-      document.getElementById("google-login").addEventListener("click", async () => {
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: window.location.href
-          }
-        });
-      });
-
-      // GitHub OAuth
-      document.getElementById("github-login").addEventListener("click", async () => {
-        await supabase.auth.signInWithOAuth({
-          provider: "github",
-          options: {
-            redirectTo: window.location.href
-          }
-        });
-      });
-    </script>
-  
-    <style>
-      .neon-text {
-        background: linear-gradient(135deg, #00FF41 0%, #00cc33 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-    </style>
-  </section>
-
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-    const supabase = createClient(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    const { data: pkceData, error: pkceError } = await supabase.auth.exchangeCodeForSession(
+      data.session.access_token
     );
 
-    const form = document.getElementById("login-form");
-    const errorEl = document.getElementById("error");
+    window.location.href = `${redirectBase}?code=${data.session.access_token}&state=${state}`;
+  });
 
-    const params = new URLSearchParams(window.location.search);
-    const redirect = params.get("redirect");
-
-    if (!redirect) {
-      document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px'>Missing redirect parameter</h1>";
-      throw new Error("No redirect param");
-    }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      errorEl.classList.add("hidden");
-
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        errorEl.textContent = error.message;
-        errorEl.classList.remove("hidden");
-        return;
+  document.getElementById("google-login").addEventListener("click", async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.href,
+        queryParams: { code_challenge: codeChallenge, code_challenge_method: 'S256' }
       }
-
-      const accessToken = data.session?.access_token;
-
-      if (!accessToken) {
-        errorEl.textContent = "Login failed: no session";
-        errorEl.classList.remove("hidden");
-        return;
-      }
-
-      // Redirect back to CLI
-      window.location.href = `${redirect}?access_token=${accessToken}`;
     });
-  </script>
+  });
 
-  <style>
-    .neon-text {
-      background: linear-gradient(135deg, #00FF41 0%, #00cc33 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-  </style>
-</Layout>
+  // GitHub OAuth
+  document.getElementById("github-login").addEventListener("click", async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: window.location.href,
+        queryParams: { code_challenge: codeChallenge, code_challenge_method: 'S256' }
+      }
+    });
+  });
+</script>

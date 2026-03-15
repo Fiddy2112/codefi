@@ -1,21 +1,19 @@
-// src/utils/constants.ts
-
 import type { MoodType, Playlist, Track } from '../types';
 
-// Terminal Colors
+// ─── Terminal Colors ──────────────────────────────────────────────────────────
 export const COLORS = {
-  PRIMARY: '#00FF41',
-  SECONDARY: '#00cc33',
+  PRIMARY:    '#00FF41',
+  SECONDARY:  '#00cc33',
   BACKGROUND: '#0E1117',
-  DARK: '#1a1d29',
-  GRAY: '#2a2d3a',
-  TEXT: '#e0e0e0',
-  ERROR: '#ff4444',
-  WARNING: '#ffaa00',
-  SUCCESS: '#00FF41',
+  DARK:       '#1a1d29',
+  GRAY:       '#2a2d3a',
+  TEXT:       '#e0e0e0',
+  ERROR:      '#ff4444',
+  WARNING:    '#ffaa00',
+  SUCCESS:    '#00FF41',
 } as const;
 
-// Mood Configurations
+// ─── Mood Configurations ──────────────────────────────────────────────────────
 export const MOODS: Record<MoodType, {
   name: string;
   description: string;
@@ -60,8 +58,7 @@ export const MOODS: Record<MoodType, {
   },
 };
 
-// Default Playlists (Free Tier)
-// Note: filepaths are just filenames, actual paths resolved at runtime
+// ─── Default Playlists (used by Pro tier) ────────────────────────────────────
 export const DEFAULT_PLAYLISTS: Playlist[] = [
   {
     id: 'focus-1',
@@ -154,7 +151,10 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
   },
 ];
 
-// Free Tier: Only 3 tracks (shared across all moods)
+// ─── Free Tier Tracks ─────────────────────────────────────────────────────────
+// must cover ALL 5 moods — play.ts does FREE_TIER_TRACKS.findIndex(t => t.mood === mood)
+// If a mood is missing, findIndex returns -1 and falls back to index 0 silently.
+// Better to have an explicit track per mood so the fallback is intentional.
 export const FREE_TIER_TRACKS: Track[] = [
   {
     id: 'free-1',
@@ -183,17 +183,44 @@ export const FREE_TIER_TRACKS: Track[] = [
     filepath: 'bug-hunt.mp3',
     isPro: false,
   },
+  // FIX: flow and creative were missing — play.ts silently played 'focus' for both
+  {
+    id: 'free-4',
+    title: 'In The Zone',
+    artist: 'Focus Masters',
+    duration: 220,
+    mood: 'flow',
+    filepath: 'in-the-zone.mp3', // reuses existing asset
+    isPro: false,
+  },
+  {
+    id: 'free-5',
+    title: 'Innovation Hour',
+    artist: 'Creative Minds',
+    duration: 240,
+    mood: 'creative',
+    filepath: 'innovation-hour.mp3', // reuses existing asset
+    isPro: false,
+  },
 ];
 
-// Pomodoro Settings
+// ─── Runtime helper: get the free track for a given mood ─────────────────────
+// Centralises the fallback logic so play.ts doesn't have to inline it.
+export function getFreeTierTrack(mood: MoodType): Track {
+  return (
+    FREE_TIER_TRACKS.find((t) => t.mood === mood) ?? FREE_TIER_TRACKS[0]
+  );
+}
+
+// ─── Pomodoro Settings ────────────────────────────────────────────────────────
 export const POMODORO = {
-  WORK_DURATION: 25, // minutes
-  BREAK_DURATION: 5, // minutes
-  LONG_BREAK_DURATION: 15, // minutes
-  SESSIONS_BEFORE_LONG_BREAK: 4,
+  WORK_DURATION:              25, // minutes
+  BREAK_DURATION:              5, // minutes
+  LONG_BREAK_DURATION:        15, // minutes
+  SESSIONS_BEFORE_LONG_BREAK:  4,
 } as const;
 
-// CLI Messages
+// ─── CLI Messages ─────────────────────────────────────────────────────────────
 export const MESSAGES = {
   WELCOME: `
 ╔═══════════════════════════════════════╗
@@ -203,45 +230,47 @@ export const MESSAGES = {
 ║                                       ║
 ╚═══════════════════════════════════════╝
   `,
-  
-  FLOW_ACTIVATED: '⚡ Flow state: ACTIVATED',
-  MUSIC_PLAYING: '🎧 Now playing:',
-  MUSIC_STOPPED: '⏹️  Music stopped',
-  MUSIC_PAUSED: '⏸️  Music paused',
-  
-  PRO_REQUIRED: '🔒 This feature requires CodeFi Pro ($5/mo)',
-  NOT_LOGGED_IN: '❌ Please login first: codefi login',
-  
-  ERROR: '❌ Error:',
+
+  FLOW_ACTIVATED:  '⚡ Flow state: ACTIVATED',
+  MUSIC_PLAYING:   '🎧 Now playing:',
+  MUSIC_STOPPED:   '⏹️  Music stopped',
+  MUSIC_PAUSED:    '⏸️  Music paused',
+  MUSIC_RESUMED:   '▶️  Music resumed',  // FIX: was missing, used in play.ts resume flow
+
+  PRO_REQUIRED:    '🔒 This feature requires CodeFi Pro ($5/mo)',
+  NOT_LOGGED_IN:   '❌ Please login first: codefi login',
+
+  // FIX: WARNING was missing — logger.ts uses MESSAGES.WARNING
+  ERROR:   '❌',
   SUCCESS: '✓',
-  INFO: 'ℹ',
+  INFO:    'ℹ',
   WARNING: '⚠',
 } as const;
 
-// API Endpoints (For Pro features)
+// ─── API Endpoints ────────────────────────────────────────────────────────────
 export const API = {
-  BASE_URL: process.env.SUPABASE_URL || '',
+  BASE_URL: process.env.SUPABASE_URL ?? '',
   ENDPOINTS: {
-    AUTH: '/auth/v1',
-    TRACKS: '/rest/v1/tracks',
-    PLAYLISTS: '/rest/v1/playlists',
-    SESSIONS: '/rest/v1/pomodoro_sessions',
+    AUTH:       '/auth/v1',
+    TRACKS:     '/rest/v1/tracks',
+    PLAYLISTS:  '/rest/v1/playlists',
+    SESSIONS:   '/rest/v1/pomodoro_sessions',
   },
 } as const;
 
-// Config File Paths
+// ─── Config File Paths ────────────────────────────────────────────────────────
 export const PATHS = {
-  CONFIG_DIR: '.codefi',
+  CONFIG_DIR:  '.codefi',
   CONFIG_FILE: 'config.json',
-  TRACKS_DIR: 'tracks',
-  CACHE_DIR: 'cache',
+  TRACKS_DIR:  'tracks',
+  CACHE_DIR:   'cache',
 } as const;
 
-// Audio Settings
+// ─── Audio Settings ───────────────────────────────────────────────────────────
 export const AUDIO = {
   DEFAULT_VOLUME: 70,
-  MAX_VOLUME: 100,
-  MIN_VOLUME: 0,
+  MAX_VOLUME:    100,
+  MIN_VOLUME:      0,
   FADE_DURATION: 2000, // ms
-  FORMATS: ['mp3', 'wav', 'ogg'],
+  FORMATS: ['mp3', 'wav', 'ogg'] as const,
 } as const;

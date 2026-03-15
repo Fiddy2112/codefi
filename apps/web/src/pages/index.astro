@@ -3,8 +3,10 @@ import Hero from '@/components/sections/Hero.astro';
 import Layout from '../layouts/Layout.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Features from '@/components/sections/Features.astro';
+import Commands from '@/components/sections/Commands.astro';
 import Pricing from '@/components/sections/Pricing.astro';
 import PomodoroSection from '@/components/sections/PomodoroSection.astro';
+import InstallInstructions from '@/components/sections/InstallInstructions.astro';
 import Footer from '@/components/sections/Footer.astro';
 
 ---
@@ -12,7 +14,9 @@ import Footer from '@/components/sections/Footer.astro';
 <BaseLayout>
 	<Hero/>
 	<Features/>
+	<Commands/>
 	<Pricing/>
 	<PomodoroSection/>
+	<InstallInstructions/>
 	<Footer/>
 </BaseLayout>

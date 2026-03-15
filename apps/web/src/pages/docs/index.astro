@@ -1,0 +1,50 @@
+---
+import Button from '@/components/ui/Button.astro';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+---
+
+<DocsLayout title="Documentation | CodeFi">
+  <div slot="header">
+    <h1 class="text-5xl font-bold text-white mb-4">Documentation</h1>
+    <p class="text-cyber-text text-xl">
+      The orchestrator for your terminal soundtrack. Learn how to configure, customize, and master CodeFi.
+    </p>
+  </div>
+
+  <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12 mb-16">
+    <a href="/docs/installation" class="p-6 rounded-2xl bg-cyber-darker border border-cyber-gray hover:border-neon-green transition-all group">
+      <h3 class="text-white font-bold mb-2 flex items-center gap-2">
+        <span class="text-neon-green">01</span> Installation
+      </h3>
+      <p class="text-cyber-text text-sm">Get the CLI running on your machine in seconds.</p>
+    </a>
+    <a href="/docs/commands" class="p-6 rounded-2xl bg-cyber-darker border border-cyber-gray hover:border-neon-green transition-all">
+      <h3 class="text-white font-bold mb-2 flex items-center gap-2">
+        <span class="text-neon-green">02</span> Commands
+      </h3>
+      <p class="text-cyber-text text-sm">Explore the full playback and library manual.</p>
+    </a>
+  </section>
+
+  <h2>Quick Overview</h2>
+  <p>
+    CodeFi is more than just a music player. It's a <strong>productivity layer</strong> built into your terminal. 
+    It uses a Python-powered audio engine for zero-latency control and integrates with AI services to understand your coding mood.
+  </p>
+
+  <pre><code>$ codefi play --mood focus</code></pre>
+
+  <h2>Next Steps</h2>
+  <ul>
+    <li>Review the <a href="/docs/installation" class="text-neon-green hover:underline">Installation Guide</a> if you haven't installed the CLI yet.</li>
+    <li>Connect your <a href="/docs/spotify" class="text-neon-green hover:underline">Spotify account</a> to sync your library.</li>
+    <li>Learn how to <a href="/docs/customization" class="text-neon-green hover:underline">customize your keybinds</a> for maximum efficiency.</li>
+  </ul>
+
+  <div class="mt-20 p-8 rounded-2xl bg-neon-green/5 border border-neon-green/20">
+    <h4 class="text-white font-bold mb-2 italic">Pro Tip</h4>
+    <p class="text-cyber-text text-sm mb-0">
+      Use <code>codefi doctor</code> at any time to verify your environment health and dependencies like <code>yt-dlp</code> and <code>pygame</code>.
+    </p>
+  </div>
+</DocsLayout>

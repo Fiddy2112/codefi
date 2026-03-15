@@ -1,170 +1,245 @@
-import { spawn } from 'child_process';
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
-import { logger } from './logger';
-import { configService } from './config';
-import type { Track } from '../types';
+import { spawn } from "child_process";
+import path from "path";
+import fs from "fs";
+import { logger } from "./logger";
+import { configService } from "./config";
+import type { Track } from "../types";
+
+// Allowed YouTube/music hostnames
+const ALLOWED_HOSTS = new Set([
+  "youtube.com",
+  "www.youtube.com",
+  "youtu.be",
+  "m.youtube.com",
+  "music.youtube.com",
+]);
 
 class YouTubeService {
   private cacheDir: string;
 
   constructor() {
-    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-    this.cacheDir = path.join(homeDir, '.codefi', 'cache', 'youtube');
-    
+    const homeDir = process.env.HOME || process.env.USERPROFILE || "";
+    this.cacheDir = path.join(homeDir, ".codefi", "cache", "youtube");
+
     if (!fs.existsSync(this.cacheDir)) {
       fs.mkdirSync(this.cacheDir, { recursive: true });
     }
   }
 
-  // Check if yt-dlp is installed
+  // validate URL before passing to yt-dlp
+  private validateYouTubeUrl(url: string): string {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new Error(`Invalid URL: ${url}`);
+    }
+
+    if (!ALLOWED_HOSTS.has(parsed.hostname)) {
+      throw new Error(
+        `URL must be from YouTube (got: ${parsed.hostname}). ` +
+          "For other sources use --url flag."
+      );
+    }
+
+    // Only allow https
+    if (parsed.protocol !== "https:") {
+      throw new Error("URL must use https");
+    }
+
+    return url;
+  }
+
+  // Sanitize a string for use as a filename
+  private sanitizeId(id: string): string {
+    return id.replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 64);
+  }
+
   async checkDependencies(): Promise<boolean> {
     return new Promise((resolve) => {
-      const check = spawn('yt-dlp', ['--version'], { shell: true });
-      
-      check.on('error', () => resolve(false));
-      check.on('close', (code) => resolve(code === 0));
+      // shell: false
+      const check = spawn("yt-dlp", ["--version"], { shell: false });
+      check.on("error", () => resolve(false));
+      check.on("close", (code) => resolve(code === 0));
     });
   }
 
-  // Install yt-dlp if missing
   async installDependencies(): Promise<void> {
-    logger.info('📦 Installing YouTube downloader (yt-dlp)...');
-    
-    const isWindows = process.platform === 'win32';
-    const installCmd = isWindows
-      ? 'winget install yt-dlp'
-      : 'pip install yt-dlp';
-    
-    logger.info(`Running: ${installCmd}`);
-    logger.info('This may take a minute...');
-    
+    logger.info("📦 Installing YouTube downloader (yt-dlp)...");
+
+    const isWindows = process.platform === "win32";
+    // split cmd and args properly — never shell: true with user input
+    const [cmd, ...args] = isWindows
+      ? ["pip", "install", "yt-dlp"]
+      : ["pip3", "install", "yt-dlp"];
+
+    logger.info(`Running: ${[cmd, ...args].join(" ")}`);
+    logger.info("This may take a minute...");
+
     return new Promise((resolve, reject) => {
-      const [cmd, ...args] = installCmd.split(' ');
-      const install = spawn(cmd, args, { shell: true, stdio: 'inherit' });
-      
-      install.on('close', (code) => {
+      const install = spawn(cmd, args, {
+        shell: false, // shell: false
+        stdio: "inherit",
+      });
+
+      install.on("error", (err) => reject(err));
+      install.on("close", (code) => {
         if (code === 0) {
-          logger.success('✓ yt-dlp installed!');
+          logger.success("✓ yt-dlp installed!");
           resolve();
         } else {
-          reject(new Error('Installation failed. Please install manually: https://github.com/yt-dlp/yt-dlp'));
+          reject(
+            new Error(
+              "Installation failed. Please install manually: https://github.com/yt-dlp/yt-dlp"
+            )
+          );
         }
       });
     });
   }
 
-  // Extract video info
   async getVideoInfo(url: string): Promise<Track> {
-    logger.info('🔍 Fetching video info...');
-    
+    const validUrl = this.validateYouTubeUrl(url); // validate first
+    logger.info("🔍 Fetching video info...");
+
     return new Promise((resolve, reject) => {
-      const ytdlp = spawn('yt-dlp', [
-        '--dump-json',
-        '--no-playlist',
-        url
-      ], { shell: true });
+      // shell: false — url is passed as a discrete arg, not interpolated
+      const ytdlp = spawn(
+        "yt-dlp",
+        ["--dump-json", "--no-playlist", validUrl],
+        { shell: false }
+      );
 
-      let output = '';
-      
-      ytdlp.stdout?.on('data', (data) => {
-        output += data.toString();
-      });
+      let output = "";
+      let errOutput = "";
 
-      ytdlp.on('close', (code) => {
+      ytdlp.stdout?.on("data", (data) => { output += data.toString(); });
+      ytdlp.stderr?.on("data", (data) => { errOutput += data.toString(); });
+
+      ytdlp.on("error", (err) => reject(err));
+      ytdlp.on("close", (code) => {
         if (code !== 0) {
-          reject(new Error('Failed to fetch video info'));
-          return;
+          return reject(
+            new Error(`Failed to fetch video info: ${errOutput.trim()}`)
+          );
         }
-
         try {
           const info = JSON.parse(output);
-          
           resolve({
             id: info.id,
             title: info.title,
-            artist: info.uploader || 'YouTube',
+            artist: info.uploader || "YouTube",
             duration: info.duration || 0,
-            mood: 'focus', // Default
-            filepath: '', // Will be downloaded
-            source: 'youtube',
+            mood: "focus",
+            filepath: "",
+            source: "youtube",
             youtubeId: info.id,
-            externalUrl: url,
+            externalUrl: validUrl,
           });
         } catch (error) {
-          reject(error);
+          reject(new Error("Failed to parse video info"));
         }
       });
     });
   }
 
-  // Download YouTube audio
   async downloadAudio(url: string): Promise<string> {
     if (!configService.isPro()) {
-      throw new Error('YouTube integration requires CodeFi Pro');
+      throw new Error("YouTube integration requires CodeFi Pro");
     }
 
-    // Check dependencies
+    const validUrl = this.validateYouTubeUrl(url); // validate first
+
     const hasYtDlp = await this.checkDependencies();
     if (!hasYtDlp) {
-      logger.warning('yt-dlp not found!');
-      const answer = await logger.confirm('Install yt-dlp now?');
+      logger.warning("yt-dlp not found!");
+      const answer = await logger.confirm("Install yt-dlp now?"); // now exists
       if (answer) {
         await this.installDependencies();
       } else {
-        throw new Error('yt-dlp required for YouTube playback');
+        throw new Error("yt-dlp required for YouTube playback");
       }
     }
 
-    // Get video info
-    const track = await this.getVideoInfo(url);
-    
-    // Check cache
-    const cacheFile = path.join(this.cacheDir, `${track.youtubeId}.mp3`);
+    const track = await this.getVideoInfo(validUrl);
+    const safeId = this.sanitizeId(track.youtubeId ?? track.id); // sanitize ID
+
+    const cacheFile = path.join(this.cacheDir, `${safeId}.mp3`);
     if (fs.existsSync(cacheFile)) {
-      logger.info('✓ Using cached audio');
+      logger.info("✓ Using cached audio");
       return cacheFile;
     }
 
-    // Download
-    logger.info('⬇️  Downloading audio... (this may take a moment)');
-    
-    return new Promise((resolve, reject) => {
-      const ytdlp = spawn('yt-dlp', [
-        '-x', // Extract audio
-        '--audio-format', 'mp3',
-        '--audio-quality', '0', // Best quality
-        '-o', cacheFile,
-        '--no-playlist',
-        url
-      ], { shell: true });
+    logger.info("⬇️  Downloading audio... (this may take a moment)");
 
-      ytdlp.stdout?.on('data', (data) => {
-        const output = data.toString();
-        if (output.includes('Downloading')) {
-          process.stdout.write('\r⬇️  Downloading...');
+    // use %(ext)s template so yt-dlp names the file correctly,
+    // then check the expected .mp3 path after conversion
+    const outputTemplate = path.join(this.cacheDir, `${safeId}.%(ext)s`);
+
+    return new Promise((resolve, reject) => {
+      const ytdlp = spawn(
+        "yt-dlp",
+        [
+          "-x",
+          "--audio-format", "mp3",
+          "--audio-quality", "0",
+          "-o", outputTemplate, // template path
+          "--no-playlist",
+          validUrl, // validated, passed as discrete arg
+        ],
+        { shell: false } // shell: false
+      );
+
+      ytdlp.stdout?.on("data", (data) => {
+        const out = data.toString();
+        if (out.includes("Downloading") || out.includes("[download]")) {
+          process.stdout.write("\r⬇️  Downloading...");
         }
       });
 
-      ytdlp.on('close', async (code) => {
-        if (code === 0) {
-          await new Promise(r => setTimeout(r, 100));
-          if (fs.existsSync(cacheFile)) {
-            process.stdout.write('\r✓ Download complete!     \n');
-            resolve(cacheFile);
-            return;
-          }
+      ytdlp.stderr?.on("data", (data) => {
+        const err = data.toString();
+        // yt-dlp sometimes writes progress to stderr
+        if (err.includes("[download]")) {
+          process.stdout.write("\r⬇️  Downloading...");
         }
-        reject(new Error('Download failed'));
+      });
+
+      ytdlp.on("error", (err) => reject(err));
+
+      ytdlp.on("close", (code) => {
+        process.stdout.write("\r");
+
+        // check the actual output path after conversion
+        if (code === 0 && fs.existsSync(cacheFile)) {
+          process.stdout.write("✓ Download complete!     \n");
+          resolve(cacheFile);
+        } else if (code === 0) {
+          // yt-dlp exited ok but file not at expected path — scan dir
+          const files = fs
+            .readdirSync(this.cacheDir)
+            .filter((f) => f.startsWith(safeId));
+
+          if (files.length > 0) {
+            process.stdout.write("✓ Download complete!     \n");
+            resolve(path.join(this.cacheDir, files[0]));
+          } else {
+            reject(new Error("Download finished but audio file not found"));
+          }
+        } else {
+          // Clean up partial file
+          if (fs.existsSync(cacheFile)) {
+            try { fs.unlinkSync(cacheFile); } catch {}
+          }
+          reject(new Error(`yt-dlp exited with code ${code}`));
+        }
       });
     });
   }
 
-  // Clear cache
   clearCache(): void {
     const files = fs.readdirSync(this.cacheDir);
-    files.forEach(file => {
+    files.forEach((file) => {
       fs.unlinkSync(path.join(this.cacheDir, file));
     });
     logger.success(`Cleared ${files.length} cached files`);

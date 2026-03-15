@@ -47,8 +47,10 @@ export interface PomodoroSession {
 
 export interface UserConfig {
   userId?: string;
+  email?: string;
   isPro: boolean;
   token?: string;
+  refreshToken?: string;
   defaultMood: MoodType;
   defaultVolume: number;
   pomodoroWorkDuration: number;
