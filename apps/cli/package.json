@@ -7,11 +7,15 @@
     "bin": {
         "codefi": "./bin/codefi.js"
     },
+    "files": [
+        "dist",
+        "bin",
+        "README.md"
+    ],
     "scripts": {
         "dev": "tsx src/index.ts",
         "dev:watch": "tsx watch src/index.ts",
-        "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-        "build:prod": "npm run build && node scripts/bundle-production.js",
+        "build": "tsup",
         "start": "node bin/codefi.js",
         "test": "vitest",
         "lint": "eslint src --ext .ts,.tsx",
@@ -28,7 +32,6 @@
     "author": "Fiddy",
     "license": "MIT",
     "dependencies": {
-        "@oclif/core": "^4.8.0",
         "@supabase/supabase-js": "^2.99.1",
         "axios": "^1.13.5",
         "boxen": "^5.1.2",

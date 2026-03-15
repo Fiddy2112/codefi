@@ -4,6 +4,7 @@ import fs from "fs";
 import os from "os";
 import { EventEmitter } from "events";
 import chalk from "chalk";
+import { getInternalScriptPath } from "@/utils/paths";
 
 const PID_FILE = path.join(os.tmpdir(), "codefi-player.pid");
 
@@ -13,92 +14,76 @@ class AudioService extends EventEmitter {
 
   private getScriptPath(): string | null {
     const candidates = [
-      path.resolve(__dirname, "../scripts/player.py"),       // production (dist)
-      path.resolve(__dirname, "../../scripts/player.py"),    // development
-      path.resolve(process.cwd(), "scripts/player.py"),      // fallback
-      path.resolve(process.cwd(), "dist/scripts/player.py"), // absolute fallback
+      getInternalScriptPath("player.py"),
+      path.resolve(process.cwd(), "scripts/player.py"),
     ];
-
     for (const p of candidates) {
       if (fs.existsSync(p)) return p;
     }
     return null;
   }
 
-  /**
-   * Try multiple Python commands in order.
-   * Windows: py -3 → python → python3
-   * Unix:    python3 → python
-   */
-  private async resolvePythonCommand(): Promise<{
-    cmd: string;
-    args: string[];
-  }> {
+  // Separate from stop() — no double cleanupPidFile race
+  private killZombieProcess(): void {
+    try {
+      if (!fs.existsSync(PID_FILE)) return;
+      const pid = parseInt(fs.readFileSync(PID_FILE, "utf8").trim(), 10);
+      if (!isNaN(pid)) {
+        process.kill(pid, 0);        // throws if not alive
+        process.kill(pid, "SIGTERM");
+      }
+    } catch {
+      // Not alive or no permission — fine
+    }
+    // Always clean the file here (stop() has its own cleanupPidFile for the new process)
+    try { if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE); } catch {}
+  }
+
+  private async resolvePythonCommand(): Promise<{ cmd: string; args: string[] }> {
     const isWin = process.platform === "win32";
     const candidates: Array<{ cmd: string; args: string[] }> = isWin
-      ? [
-          { cmd: "py", args: ["-3"] },
-          { cmd: "python", args: [] },
-          { cmd: "python3", args: [] },
-        ]
-      : [
-          { cmd: "python3", args: [] },
-          { cmd: "python", args: [] },
-        ];
+      ? [{ cmd: "py", args: ["-3"] }, { cmd: "python", args: [] }, { cmd: "python3", args: [] }]
+      : [{ cmd: "python3", args: [] }, { cmd: "python", args: [] }];
 
     for (const candidate of candidates) {
-      const found = await this.commandExists(candidate.cmd);
-      if (found) return candidate;
+      if (await this.commandExists(candidate.cmd)) return candidate;
     }
-
     throw new Error(
-      "Python 3 not found. Install Python 3 from https://python.org " +
-        "then run: pip install pygame"
+      "Python 3 not found. Install Python 3 from https://python.org then run: pip install pygame"
     );
   }
 
   private commandExists(cmd: string): Promise<boolean> {
     return new Promise((resolve) => {
-      const check = spawn(cmd, ["--version"], {
-        shell: false,
-        stdio: "ignore",
-      });
+      const check = spawn(cmd, ["--version"], { shell: false, stdio: "ignore" });
       check.on("error", () => resolve(false));
       check.on("close", (code) => resolve(code === 0));
     });
   }
 
+  // Async preconditions resolved BEFORE entering Promise constructor
+  // Avoids the async-in-Promise-constructor antipattern where thrown errors
+  // before the first await are swallowed silently.
   public async play(trackPath: string, volume: number = 50): Promise<void> {
     this.stop();
+    this.killZombieProcess();
 
-    return new Promise(async (resolve, reject) => {
-      const scriptPath = this.getScriptPath();
-      if (!scriptPath) {
-        return reject(
-          new Error(
-            "Missing player.py. Ensure apps/cli/scripts/player.py exists."
-          )
-        );
-      }
+    // Resolve all preconditions outside the Promise
+    const scriptPath = this.getScriptPath();
+    if (!scriptPath) {
+      throw new Error("Missing player.py. Ensure apps/cli/scripts/player.py exists.");
+    }
 
-      const absoluteTrackPath = path.resolve(trackPath);
-      if (!fs.existsSync(absoluteTrackPath)) {
-        return reject(new Error(`Audio file not found: ${absoluteTrackPath}`));
-      }
+    const absoluteTrackPath = path.resolve(trackPath);
+    if (!fs.existsSync(absoluteTrackPath)) {
+      throw new Error(`Audio file not found: ${absoluteTrackPath}`);
+    }
 
-      let pythonCmd: { cmd: string; args: string[] };
-      try {
-        pythonCmd = await this.resolvePythonCommand(); // probe before spawning
-      } catch (err: any) {
-        return reject(err);
-      }
+    const pythonCmd = await this.resolvePythonCommand();
 
-      const allArgs = [
-        ...pythonCmd.args,
-        scriptPath,
-        absoluteTrackPath,
-        volume.toString(),
-      ];
+    // Now enter the Promise — executor is purely synchronous setup
+    return new Promise((resolve, reject) => {
+      const allArgs = [...pythonCmd.args, scriptPath, absoluteTrackPath, volume.toString()];
 
       this.pythonProcess = spawn(pythonCmd.cmd, allArgs, {
         stdio: ["pipe", "pipe", "pipe"],
@@ -111,67 +96,51 @@ class AudioService extends EventEmitter {
       const finish = (err?: Error) => {
         if (settled) return;
         settled = true;
-        if (err) reject(err);
-        else resolve();
+        err ? reject(err) : resolve();
       };
 
       this.pythonProcess.on("error", (err: NodeJS.ErrnoException) => {
-        const msg =
-          err.code === "ENOENT"
-            ? `Python not found (tried: ${pythonCmd.cmd}). Install Python 3 and run: pip install pygame`
-            : err.message;
+        const msg = err.code === "ENOENT"
+          ? `Python not found (tried: ${pythonCmd.cmd}). Install Python 3 and run: pip install pygame`
+          : err.message;
         finish(new Error(`Audio engine: ${msg}`));
       });
 
       if (this.pythonProcess.pid) {
-        try {
-          fs.writeFileSync(PID_FILE, this.pythonProcess.pid.toString());
-        } catch {}
+        try { fs.writeFileSync(PID_FILE, this.pythonProcess.pid.toString()); } catch {}
       }
 
-      this.pythonProcess.stdout?.on("data", (data) => {
-        const output = data.toString();
-        if (output.includes("READY:")) {
+      this.pythonProcess.stdout?.on("data", (data: Buffer) => {
+        if (data.toString().includes("READY:")) {
           this.isReady = true;
           finish();
         }
       });
 
-      this.pythonProcess.stderr?.on("data", (d) => {
+      this.pythonProcess.stderr?.on("data", (d: Buffer) => {
         const err = d.toString();
-        // Suppress pygame's noisy startup output
         if (!err.includes("pygame") && !err.includes("Hello from")) {
           console.error(chalk.red(`[Audio Engine]: ${err.trim()}`));
         }
       });
 
-      this.pythonProcess.on("close", (code, signal) => {
+      this.pythonProcess.on("close", (code: number | null) => {
         this.isReady = false;
         this.cleanupPidFile();
         this.emit("stop");
-
         if (!settled) {
-          const hint =
-            code !== 0
-              ? `Player exited (code ${code}). Is pygame installed? Run: pip install pygame`
-              : "Audio stopped before ready. Check track file and pygame installation.";
+          const hint = code !== 0 && code !== null
+            ? `Player exited (code ${code}). Is pygame installed? Run: pip install pygame`
+            : "Audio stopped before ready. Check track file and pygame installation.";
           finish(new Error(hint));
         }
       });
     });
   }
 
-  public setVolume(vol: number): void {
-    this.send(`VOL:${Math.max(0, Math.min(100, vol))}`);
-  }
-
-  public pause(): void {
-    this.send("PAUSE");
-  }
-
-  public resume(): void {
-    this.send("RESUME");
-  }
+  public setVolume(vol: number): void { this.send(`VOL:${Math.max(0, Math.min(100, vol))}`); }
+  public pause():  void { this.send("PAUSE");  }
+  public resume(): void { this.send("RESUME"); }
 
   public stop(): void {
     this.send("STOP");
@@ -188,17 +157,12 @@ class AudioService extends EventEmitter {
   }
 
   public setMood(_mood: string): void {
-    // Mood affects which track is loaded, handled by play command.
-    // This is a no-op at the audio layer — kept for API compatibility.
+    // No-op — mood determines which track file is loaded upstream
   }
 
   private send(cmd: string): void {
     if (this.pythonProcess?.stdin && !this.pythonProcess.killed) {
-      try {
-        this.pythonProcess.stdin.write(cmd + "\n");
-      } catch {
-        // Swallow EPIPE — process already dead
-      }
+      try { this.pythonProcess.stdin.write(cmd + "\n"); } catch { /* EPIPE — ignore */ }
     }
   }
 

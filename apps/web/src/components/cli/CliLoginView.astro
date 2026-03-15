@@ -20,7 +20,6 @@ import Layout from "@/layouts/Layout.astro";
       <!-- Card -->
       <div class="bg-neutral-900/60 backdrop-blur border border-neutral-800 rounded-2xl p-8 shadow-xl space-y-6">
 
-        <!-- OAuth Buttons -->
         <div class="space-y-3">
           <button
             id="google-login"
@@ -39,14 +38,12 @@ import Layout from "@/layouts/Layout.astro";
           </button>
         </div>
 
-        <!-- Divider -->
         <div class="flex items-center gap-3">
           <div class="flex-1 h-px bg-neutral-800"></div>
           <span class="text-xs text-cyber-text font-mono">OR</span>
           <div class="flex-1 h-px bg-neutral-800"></div>
         </div>
 
-        <!-- Email Login -->
         <form id="login-form" class="space-y-4">
           <input
             type="email"
@@ -75,7 +72,7 @@ import Layout from "@/layouts/Layout.astro";
         </form>
 
         <p id="error" class="text-red-400 text-sm hidden font-mono"></p>
-        <p id="info"  class="text-green-400 text-sm hidden font-mono"></p>
+        <p id="info"  class="text-green-400 text-sm hidden font-mono text-center"></p>
 
       </div>
     </div>
@@ -93,40 +90,54 @@ import Layout from "@/layouts/Layout.astro";
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    const supabase = createClient(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-    );
+    // ── Env var check (fail fast with a clear message) ─────────────────────────
+    const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
+    const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
-    // ── Read params from URL ───────────────────────────────────────────────────
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      document.querySelector('section').innerHTML = `
+        <div style="color:white;text-align:center;padding:80px 24px;font-family:monospace">
+          <div style="font-size:48px;color:#ff4444">✗</div>
+          <div style="font-size:20px;margin-top:16px">Configuration error</div>
+          <div style="color:#888;margin-top:8px">
+            Missing Supabase environment variables.<br/>
+            Add <code style="color:#00FF41">PUBLIC_SUPABASE_URL</code> and
+            <code style="color:#00FF41">PUBLIC_SUPABASE_ANON_KEY</code>
+            to your Vercel project settings.
+          </div>
+        </div>`;
+      throw new Error("Missing Supabase env vars");
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ── URL params ─────────────────────────────────────────────────────────────
     const params       = new URLSearchParams(window.location.search);
-    const redirectBase = params.get("redirect");  // http://localhost:43721/callback
+    const redirectBase = params.get("redirect"); // http://localhost:43721/callback
     const state        = params.get("state");
     const errorEl      = document.getElementById("error");
     const infoEl       = document.getElementById("info");
 
-    // Validate required params
     if (!redirectBase || !state) {
       document.querySelector('section').innerHTML = `
         <div style="color:white;text-align:center;padding:80px 24px;font-family:monospace">
           <div style="font-size:48px;color:#ff4444">✗</div>
           <div style="font-size:20px;margin-top:16px">Missing parameters</div>
-          <div style="color:#888;margin-top:8px">Please run <code style="color:#00FF41">codefi login</code> again.</div>
+          <div style="color:#888;margin-top:8px">
+            Please run <code style="color:#00FF41">codefi login</code> again.
+          </div>
         </div>`;
       throw new Error("Missing redirect or state param");
     }
 
-    // ── Forward token to CLI ───────────────────────────────────────────────────
+    // ── Helpers ────────────────────────────────────────────────────────────────
     function forwardToCLI(accessToken, refreshToken) {
-      showInfo("Redirecting back to terminal...");
-
+      showInfo("✓ Login successful! Redirecting back to terminal...");
       const url = new URL(redirectBase);
       url.searchParams.set("access_token",  accessToken);
       url.searchParams.set("refresh_token", refreshToken || "");
       url.searchParams.set("state",         state);
-
-      // Small delay so user sees the info message
-      setTimeout(() => { window.location.href = url.toString(); }, 400);
+      setTimeout(() => { window.location.href = url.toString(); }, 600);
     }
 
     function showError(msg) {
@@ -142,32 +153,28 @@ import Layout from "@/layouts/Layout.astro";
     }
 
     function setLoading(btn, loading) {
-      btn.disabled = loading;
+      btn.disabled    = loading;
       btn.textContent = loading ? "Loading..." : btn.dataset.label;
     }
 
     // ── Check if returning from OAuth redirect ─────────────────────────────────
-    // Supabase puts tokens in URL hash after OAuth: #access_token=...&refresh_token=...
-    // This page is set as redirectTo, so we'll land here after Google/GitHub login.
-    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    // After Google/GitHub login, Supabase redirects back to this page with
+    // tokens in the URL hash: #access_token=...&refresh_token=...&type=...
+    const hash        = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const hashToken   = hash.get("access_token");
     const hashRefresh = hash.get("refresh_token");
 
     if (hashToken) {
-      // OAuth login came back with token in hash → forward to CLI immediately
       forwardToCLI(hashToken, hashRefresh || "");
     } else {
-      // Also check if Supabase already has an active session (e.g. page reload)
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData?.session?.access_token) {
-        forwardToCLI(
-          sessionData.session.access_token,
-          sessionData.session.refresh_token
-        );
+      // Check for an existing valid session (e.g. user reloaded the page)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        forwardToCLI(session.access_token, session.refresh_token);
       }
     }
 
-    // ── Email / password login ─────────────────────────────────────────────────
+    // ── Email / password ───────────────────────────────────────────────────────
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       errorEl.classList.add("hidden");
@@ -184,59 +191,62 @@ import Layout from "@/layouts/Layout.astro";
         setLoading(submitBtn, false);
         return showError(error.message);
       }
-
       if (!data.session?.access_token) {
         setLoading(submitBtn, false);
         return showError("Login failed: no session returned. Please try again.");
       }
 
-      // Forward directly — no PKCE exchange needed for password flow
       forwardToCLI(data.session.access_token, data.session.refresh_token);
     });
 
-    // ── Google OAuth ───────────────────────────────────────────────────────────
-    document.getElementById("google-login").addEventListener("click", async () => {
-      const googleBtn = document.getElementById("google-login");
-      setLoading(googleBtn, true);
+    // ── OAuth helper ───────────────────────────────────────────────────────────
+    // It returns { data: { url, provider }, error }.
+    // We must read data.url and navigate manually.
+    async function startOAuth(provider) {
+      const btn = document.getElementById(`${provider}-login`);
+      setLoading(btn, true);
+      errorEl.classList.add("hidden");
 
-      // redirectTo = this same page (with same state param)
-      // After Google auth, Supabase redirects back here with #access_token in hash
+      // redirectTo = this same page — after OAuth, Supabase redirects here
+      // with tokens in the URL hash, which the block above will pick up.
       const redirectTo = window.location.href;
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
         options: {
           redirectTo,
-          scopes: "email profile",
-        }
+          skipBrowserRedirect: false,  // let Supabase handle the redirect
+        },
       });
 
       if (error) {
-        setLoading(googleBtn, false);
-        showError(error.message);
-      }
-      // If no error, browser is being redirected — button stays loading
-    });
-
-    // ── GitHub OAuth ───────────────────────────────────────────────────────────
-    document.getElementById("github-login").addEventListener("click", async () => {
-      const githubBtn = document.getElementById("github-login");
-      setLoading(githubBtn, true);
-
-      const redirectTo = window.location.href;
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "github",
-        options: {
-          redirectTo,
-          scopes: "user:email",
+        setLoading(btn, false);
+        // Common errors: provider not enabled, redirect URL not whitelisted
+        if (error.message.includes("provider is not enabled")) {
+          return showError(
+            `${provider} login is not enabled. ` +
+            `Enable it in Supabase dashboard → Authentication → Providers.`
+          );
         }
-      });
-
-      if (error) {
-        setLoading(githubBtn, false);
-        showError(error.message);
+        return showError(error.message);
       }
-    });
+
+      // Navigate to the OAuth URL manually
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        setLoading(btn, false);
+        showError(
+          `Could not start ${provider} login. ` +
+          `Make sure ${provider} is enabled in your Supabase project.`
+        );
+      }
+    }
+
+    document.getElementById("google-login")
+      .addEventListener("click", () => startOAuth("google"));
+
+    document.getElementById("github-login")
+      .addEventListener("click", () => startOAuth("github"));
   </script>
 </Layout>

@@ -7,6 +7,7 @@ import os from 'os';
 import { configService } from '@/services/config';
 import { logger } from '@/services/logger';
 import { COLORS } from '@/utils/constants';
+import { getInternalScriptPath } from '@/utils/paths';
 
 interface CheckResult {
   label:   string;
@@ -230,8 +231,7 @@ export const doctorCommand = new Command('doctor')
 
     // ── player.py ────────────────────────────────────────────────────────────
     const playerPaths = [
-      path.resolve(__dirname, '../scripts/player.py'),
-      path.resolve(__dirname, '../../scripts/player.py'),
+      getInternalScriptPath('player.py'),
       path.resolve(process.cwd(), 'scripts/player.py'),
     ];
     const playerFound = playerPaths.find((p) => fs.existsSync(p));
