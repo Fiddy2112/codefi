@@ -158,6 +158,9 @@ pnpm lint             # Lint all packages
 - [x] CLI Core with `play`, `stop`, `mood`
 - [x] AI Mood Detection
 - [x] Pomodoro Timer
+- [x] Focus Mode (DND + Distraction Blocking)
+- [x] Coding Session Timer
+- [x] Weather & Lyrics integrations
 
 ### Phase 2: Pro Features (In Progress)
 - [x] Spotify integration
@@ -187,7 +190,7 @@ pnpm lint             # Lint all packages
 Install the CLI globally to start brewing beats:
 
 ```bash
-npm install -g @codefi/cli
+npm install -g @felizz23/codefi
 ```
 
 ### Quick Start
@@ -201,6 +204,12 @@ codefi play
 
 # AI Mood Detection (Requires Pro)
 codefi play --ai-mood
+
+# Enter Focus Mode
+codefi focus start 60
+
+# Check Weather
+codefi weather "Ho Chi Minh City"
 ```
 
 ### Full Command Reference
@@ -212,6 +221,8 @@ codefi play --ai-mood
 - `codefi volume <level>`: Set volume (0-100) or adjust relatively (e.g., `+10`, `-5`).
 - `codefi queue`: Manage your upcoming tracks. Add YouTube URLs or local files.
 - `codefi sleep <minutes>`: Set a sleep timer to auto-stop music.
+- `codefi weather [city]`: Check current weather and 3-day forecast.
+- `codefi lyrics [title]`: Fetch lyrics for the current track or a specific song (Genius.com).
 
 #### 📚 Library & Discovery
 - `codefi mood`: Interactively change your current listening mood.
@@ -220,7 +231,9 @@ codefi play --ai-mood
 - `codefi spotify`: Connect and control your Spotify account (Pro).
 
 #### ⏱️ Productivity
-- `codefi pomodoro`: Focus/Break timer integrated with your soundtrack.
+- `codefi focus`: Enter deep focus mode. Blocks distracting sites, enables DND, and plays focus music.
+- `codefi timer`: Track total coding time. View daily and weekly stats in a terminal bar chart.
+- `codefi pomodoro`: Focus/Break timer integrated with your soundtrack (Pro).
 
 #### ⚙️ Configuration
 - `codefi login` / `logout`: Manage your CodeFi account.
@@ -295,7 +308,7 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 - **Website:** [codefi.dev](https://codefi.dev) (Coming soon)
 - **Documentation:** [docs.codefi.dev](https://docs.codefi.dev)
-- **npm Package:** [@codefi/cli](https://www.npmjs.com/package/@codefi/cli)
+- **npm Package:** [@felizz23/codefi](https://www.npmjs.com/package/@felizz23/codefi)
 - **Twitter:** [@codefi_dev](https://twitter.com/codefi_dev)
 - **Discord:** [Join our community](https://discord.gg/codefi)
 

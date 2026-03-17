@@ -20,11 +20,16 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
     <li><code>--ai-mood</code>: Automatically detect mood based on current activity (Pro).</li>
   </ul>
 
-  <h3><code>stop</code></h3>
-  <p>Stops all active audio streams and clears terminal status.</p>
-
   <h3><code>status</code></h3>
   <p>Shows the current track, artist, progress, and a mini terminal visualizer.</p>
+
+  <h3><code>weather</code></h3>
+  <p>Stay updated while you code. Shows current conditions and a 3-day forecast.</p>
+  <pre><code>$ codefi weather "New York"</code></pre>
+
+  <h3><code>lyrics</code></h3>
+  <p>Fetches lyrics for the current track via Genius API. Supports static search as well.</p>
+  <pre><code>$ codefi lyrics "Lofi Study" --artist "CodeFi Beats"</code></pre>
 
   <h2>Library Management</h2>
 
@@ -42,9 +47,27 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
   <h2>Productivity Tools</h2>
 
+  <h3><code>focus</code></h3>
+  <p>Enter deep focus mode. This is the ultimate tool for deep work.</p>
+  <ul>
+    <li>Enables <strong>Do Not Disturb</strong> system-wide.</li>
+    <li>Blocks distracting websites (Facebook, Twitter, Reddit, etc.) via <code>/etc/hosts</code>.</li>
+    <li>Automatically plays your preferred focus music.</li>
+  </ul>
+  <pre><code>$ codefi focus start 60</code></pre>
+
+  <h3><code>timer</code></h3>
+  <p>Track your total keyboard time. Helps you visualize your productivity trends.</p>
+  <ul>
+    <li><code>today</code>: Detailed bar chart of today's coding sessions.</li>
+    <li><code>week</code>: Weekly summary and daily breakdown.</li>
+    <li><code>reset</code>: Clear your history.</li>
+  </ul>
+  <pre><code>$ codefi timer start --note "Building landing page"</code></pre>
+
   <h3><code>pomodoro</code></h3>
-  <p>Control the integrated Pomodoro timer.</p>
+  <p>Control the integrated Pomodoro timer (Pro).</p>
   <pre><code>$ codefi pomodoro start</code></pre>
-  <p><strong>Note:</strong> During a break, CodeFi will automatically dim or pause the music depending on your config settings.</p>
+  <p><strong>Note:</strong> During a break, CodeFi will automatically dim or pause the music depending on your configuration.</p>
 
 </DocsLayout>

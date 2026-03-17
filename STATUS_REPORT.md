@@ -59,7 +59,7 @@ codefi play --volume 70 --mood focus
 
 ### Free Version (What users get now)
 ```bash
-npm install -g @codefi/cli
+npm install -g @felizz23/codefi
 codefi play --mood focus
 # ✅ IMMEDIATELY PLAYS MUSIC - No setup required!
 ```

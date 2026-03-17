@@ -15,7 +15,7 @@
         "build": "pnpm --filter \"./apps/*\" build",
         "build:web": "pnpm --filter web build",
         "build:cli": "pnpm --filter cli build",
-        "preview:cli": "pnpm --filter @codefi/cli dev -- --help",
+        "preview:cli": "pnpm --filter @felizz23/codefi dev -- --help",
         "lint": "pnpm --filter \"./apps/*\" lint",
         "test": "pnpm --filter \"./apps/*\" test",
         "format": "prettier --write \"**/*.{ts,tsx,md,json,astro}\"",

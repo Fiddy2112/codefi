@@ -12,7 +12,7 @@ import Layout from "@/layouts/Layout.astro";
           Connect Your<br />
           <span class="neon-text">Codefi CLI</span>
         </h1>
-        <p class="text-cyber-text text-sm">
+        <p id="header-sub" class="text-cyber-text text-sm">
           Authenticate to unlock Pro features in your terminal.
         </p>
       </div>
@@ -20,57 +20,76 @@ import Layout from "@/layouts/Layout.astro";
       <!-- Card -->
       <div class="bg-neutral-900/60 backdrop-blur border border-neutral-800 rounded-2xl p-8 shadow-xl space-y-6">
 
+        <!-- Tab toggle -->
+        <div class="flex rounded-lg border border-neutral-700 overflow-hidden">
+          <button
+            id="tab-login"
+            class="flex-1 py-2 text-sm font-mono font-semibold transition-all duration-200 bg-neon-green text-black"
+          >
+            Login
+          </button>
+          <button
+            id="tab-signup"
+            class="flex-1 py-2 text-sm font-mono font-semibold transition-all duration-200 text-neutral-400 hover:text-white"
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <!-- OAuth Buttons -->
         <div class="space-y-3">
           <button
             id="google-login"
-            data-label="Continue with Google"
+            data-label-login="Continue with Google"
+            data-label-signup="Sign up with Google"
             class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Continue with Google
           </button>
-
           <button
             id="github-login"
-            data-label="Continue with GitHub"
+            data-label-login="Continue with GitHub"
+            data-label-signup="Sign up with GitHub"
             class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Continue with GitHub
           </button>
         </div>
 
+        <!-- Divider -->
         <div class="flex items-center gap-3">
           <div class="flex-1 h-px bg-neutral-800"></div>
           <span class="text-xs text-cyber-text font-mono">OR</span>
           <div class="flex-1 h-px bg-neutral-800"></div>
         </div>
 
+        <!-- ── LOGIN FORM ── -->
         <form id="login-form" class="space-y-4">
-          <input
-            type="email"
-            id="email"
-            placeholder="Email"
-            required
-            autocomplete="email"
-            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white"
-          />
-          <input
-            type="password"
-            id="password"
-            placeholder="Password"
-            required
-            autocomplete="current-password"
-            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white"
-          />
-          <button
-            type="submit"
-            id="submit-btn"
-            data-label="Login with Email"
-            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <input type="email" id="login-email" placeholder="Email" required autocomplete="email"
+            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white placeholder-neutral-500" />
+          <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password"
+            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white placeholder-neutral-500" />
+          <button type="submit" id="login-submit" data-label="Login with Email"
+            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
             Login with Email
           </button>
         </form>
 
+        <!-- ── SIGNUP FORM ── -->
+        <form id="signup-form" class="space-y-4 hidden">
+          <input type="email" id="signup-email" placeholder="Email" required autocomplete="email"
+            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white placeholder-neutral-500" />
+          <input type="password" id="signup-password" placeholder="Password (min 8 characters)" required autocomplete="new-password" minlength="8"
+            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white placeholder-neutral-500" />
+          <input type="password" id="signup-confirm" placeholder="Confirm password" required autocomplete="new-password"
+            class="w-full px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 focus:outline-none focus:border-neon-green text-white placeholder-neutral-500" />
+          <button type="submit" id="signup-submit" data-label="Create Account"
+            class="w-full py-2 rounded-lg border border-neon-green text-neon-green font-mono font-semibold hover:bg-neon-green hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            Create Account
+          </button>
+        </form>
+
+        <!-- Status messages -->
         <p id="error" class="text-red-400 text-sm hidden font-mono"></p>
         <p id="info"  class="text-green-400 text-sm hidden font-mono text-center"></p>
 
@@ -85,25 +104,27 @@ import Layout from "@/layouts/Layout.astro";
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
+    .tab-active   { background-color: #00FF41; color: #000; }
+    .tab-inactive { background-color: transparent; color: #737373; }
+    .tab-inactive:hover { color: #fff; }
   </style>
 
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    // ── Env var check (fail fast with a clear message) ─────────────────────────
+    // ── Env check ──────────────────────────────────────────────────────────────
     const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
     const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
     if (!SUPABASE_URL || !SUPABASE_KEY) {
-      document.querySelector('section').innerHTML = `
+      document.querySelector("section").innerHTML = `
         <div style="color:white;text-align:center;padding:80px 24px;font-family:monospace">
           <div style="font-size:48px;color:#ff4444">✗</div>
           <div style="font-size:20px;margin-top:16px">Configuration error</div>
           <div style="color:#888;margin-top:8px">
-            Missing Supabase environment variables.<br/>
-            Add <code style="color:#00FF41">PUBLIC_SUPABASE_URL</code> and
-            <code style="color:#00FF41">PUBLIC_SUPABASE_ANON_KEY</code>
-            to your Vercel project settings.
+            Missing <code style="color:#00FF41">PUBLIC_SUPABASE_URL</code> or
+            <code style="color:#00FF41">PUBLIC_SUPABASE_ANON_KEY</code>.<br/>
+            Add them to your Vercel project settings.
           </div>
         </div>`;
       throw new Error("Missing Supabase env vars");
@@ -113,13 +134,11 @@ import Layout from "@/layouts/Layout.astro";
 
     // ── URL params ─────────────────────────────────────────────────────────────
     const params       = new URLSearchParams(window.location.search);
-    const redirectBase = params.get("redirect"); // http://localhost:43721/callback
+    const redirectBase = params.get("redirect");
     const state        = params.get("state");
-    const errorEl      = document.getElementById("error");
-    const infoEl       = document.getElementById("info");
 
     if (!redirectBase || !state) {
-      document.querySelector('section').innerHTML = `
+      document.querySelector("section").innerHTML = `
         <div style="color:white;text-align:center;padding:80px 24px;font-family:monospace">
           <div style="font-size:48px;color:#ff4444">✗</div>
           <div style="font-size:20px;margin-top:16px">Missing parameters</div>
@@ -130,14 +149,25 @@ import Layout from "@/layouts/Layout.astro";
       throw new Error("Missing redirect or state param");
     }
 
+    // ── DOM refs ───────────────────────────────────────────────────────────────
+    const errorEl       = document.getElementById("error");
+    const infoEl        = document.getElementById("info");
+    const tabLogin      = document.getElementById("tab-login");
+    const tabSignup     = document.getElementById("tab-signup");
+    const loginForm     = document.getElementById("login-form");
+    const signupForm    = document.getElementById("signup-form");
+    const headerSub     = document.getElementById("header-sub");
+    const googleBtn     = document.getElementById("google-login");
+    const githubBtn     = document.getElementById("github-login");
+
     // ── Helpers ────────────────────────────────────────────────────────────────
     function forwardToCLI(accessToken, refreshToken) {
-      showInfo("✓ Login successful! Redirecting back to terminal...");
+      showInfo("✓ Success! Redirecting back to terminal...");
       const url = new URL(redirectBase);
       url.searchParams.set("access_token",  accessToken);
       url.searchParams.set("refresh_token", refreshToken || "");
       url.searchParams.set("state",         state);
-      setTimeout(() => { window.location.href = url.toString(); }, 600);
+      setTimeout(() => { window.location.href = url.toString(); }, 700);
     }
 
     function showError(msg) {
@@ -152,14 +182,46 @@ import Layout from "@/layouts/Layout.astro";
       errorEl.classList.add("hidden");
     }
 
+    function clearMessages() {
+      errorEl.classList.add("hidden");
+      infoEl.classList.add("hidden");
+    }
+
     function setLoading(btn, loading) {
       btn.disabled    = loading;
       btn.textContent = loading ? "Loading..." : btn.dataset.label;
     }
 
-    // ── Check if returning from OAuth redirect ─────────────────────────────────
-    // After Google/GitHub login, Supabase redirects back to this page with
-    // tokens in the URL hash: #access_token=...&refresh_token=...&type=...
+    // ── Tab switching ──────────────────────────────────────────────────────────
+    let currentTab = "login";
+
+    function switchTab(tab) {
+      currentTab = tab;
+      clearMessages();
+
+      if (tab === "login") {
+        tabLogin.className  = "flex-1 py-2 text-sm font-mono font-semibold transition-all duration-200 tab-active";
+        tabSignup.className = "flex-1 py-2 text-sm font-mono font-semibold transition-all duration-200 tab-inactive";
+        loginForm.classList.remove("hidden");
+        signupForm.classList.add("hidden");
+        headerSub.textContent = "Authenticate to unlock Pro features in your terminal.";
+        googleBtn.textContent = googleBtn.dataset.labelLogin;
+        githubBtn.textContent = githubBtn.dataset.labelLogin;
+      } else {
+        tabSignup.className = "flex-1 py-2 text-sm font-mono font-semibold transition-all duration-200 tab-active";
+        tabLogin.className  = "flex-1 py-2 text-sm font-mono font-semibold transition-all duration-200 tab-inactive";
+        signupForm.classList.remove("hidden");
+        loginForm.classList.add("hidden");
+        headerSub.textContent = "Create your account to get started.";
+        googleBtn.textContent = googleBtn.dataset.labelSignup;
+        githubBtn.textContent = githubBtn.dataset.labelSignup;
+      }
+    }
+
+    tabLogin.addEventListener("click",  () => switchTab("login"));
+    tabSignup.addEventListener("click", () => switchTab("signup"));
+
+    // ── OAuth redirect check ───────────────────────────────────────────────────
     const hash        = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const hashToken   = hash.get("access_token");
     const hashRefresh = hash.get("refresh_token");
@@ -167,30 +229,34 @@ import Layout from "@/layouts/Layout.astro";
     if (hashToken) {
       forwardToCLI(hashToken, hashRefresh || "");
     } else {
-      // Check for an existing valid session (e.g. user reloaded the page)
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
         forwardToCLI(session.access_token, session.refresh_token);
       }
     }
 
-    // ── Email / password ───────────────────────────────────────────────────────
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
+    // ── Email login ────────────────────────────────────────────────────────────
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      errorEl.classList.add("hidden");
+      clearMessages();
 
-      const submitBtn = document.getElementById("submit-btn");
+      const submitBtn = document.getElementById("login-submit");
       setLoading(submitBtn, true);
 
-      const email    = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+      const email    = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
         setLoading(submitBtn, false);
+        // Friendly message for wrong credentials
+        if (error.message.toLowerCase().includes("invalid")) {
+          return showError("Incorrect email or password. Try again or switch to Sign Up.");
+        }
         return showError(error.message);
       }
+
       if (!data.session?.access_token) {
         setLoading(submitBtn, false);
         return showError("Login failed: no session returned. Please try again.");
@@ -199,54 +265,87 @@ import Layout from "@/layouts/Layout.astro";
       forwardToCLI(data.session.access_token, data.session.refresh_token);
     });
 
-    // ── OAuth helper ───────────────────────────────────────────────────────────
-    // It returns { data: { url, provider }, error }.
-    // We must read data.url and navigate manually.
-    async function startOAuth(provider) {
-      const btn = document.getElementById(`${provider}-login`);
-      setLoading(btn, true);
-      errorEl.classList.add("hidden");
+    // ── Email signup ───────────────────────────────────────────────────────────
+    signupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMessages();
 
-      // redirectTo = this same page — after OAuth, Supabase redirects here
-      // with tokens in the URL hash, which the block above will pick up.
-      const redirectTo = window.location.href;
+      const submitBtn  = document.getElementById("signup-submit");
+      const email      = document.getElementById("signup-email").value.trim();
+      const password   = document.getElementById("signup-password").value;
+      const confirm    = document.getElementById("signup-confirm").value;
+
+      // Client-side validation
+      if (password.length < 8) {
+        return showError("Password must be at least 8 characters.");
+      }
+      if (password !== confirm) {
+        return showError("Passwords do not match.");
+      }
+
+      setLoading(submitBtn, true);
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        setLoading(submitBtn, false);
+        if (error.message.toLowerCase().includes("already registered")) {
+          showError("This email is already registered. Switch to Login.");
+          setTimeout(() => switchTab("login"), 1500);
+          return;
+        }
+        return showError(error.message);
+      }
+
+      // Supabase may require email confirmation depending on project settings
+      if (data.session?.access_token) {
+        // Email confirmation disabled → logged in immediately
+        forwardToCLI(data.session.access_token, data.session.refresh_token);
+      } else {
+        // Email confirmation enabled → ask user to check inbox
+        setLoading(submitBtn, false);
+        showInfo("✓ Account created! Check your email to confirm, then come back and log in.");
+        setTimeout(() => switchTab("login"), 3000);
+      }
+    });
+
+    // ── OAuth ──────────────────────────────────────────────────────────────────
+    async function startOAuth(provider) {
+      const btn = provider === "google" ? googleBtn : githubBtn;
+      setLoading(btn, true);
+      clearMessages();
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo,
-          skipBrowserRedirect: false,  // let Supabase handle the redirect
+          redirectTo: window.location.href,
+          skipBrowserRedirect: false,
         },
       });
 
       if (error) {
         setLoading(btn, false);
-        // Common errors: provider not enabled, redirect URL not whitelisted
         if (error.message.includes("provider is not enabled")) {
           return showError(
-            `${provider} login is not enabled. ` +
-            `Enable it in Supabase dashboard → Authentication → Providers.`
+            `${provider} is not enabled. ` +
+            `Go to Supabase → Authentication → Providers to enable it.`
           );
         }
         return showError(error.message);
       }
 
-      // Navigate to the OAuth URL manually
       if (data?.url) {
         window.location.href = data.url;
       } else {
         setLoading(btn, false);
         showError(
           `Could not start ${provider} login. ` +
-          `Make sure ${provider} is enabled in your Supabase project.`
+          `Make sure it's enabled in your Supabase project.`
         );
       }
     }
 
-    document.getElementById("google-login")
-      .addEventListener("click", () => startOAuth("google"));
-
-    document.getElementById("github-login")
-      .addEventListener("click", () => startOAuth("github"));
+    googleBtn.addEventListener("click", () => startOAuth("google"));
+    githubBtn.addEventListener("click", () => startOAuth("github"));
   </script>
 </Layout>

@@ -1,5 +1,5 @@
 {
-    "name": "@codefi/cli",
+    "name": "@felizz23/codefi",
     "version": "0.1.0",
     "description": "Brewing beats for your code - CLI tool",
     "main": "dist/index.js",

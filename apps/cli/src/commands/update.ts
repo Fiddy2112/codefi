@@ -5,7 +5,7 @@ import https from 'https';
 import { logger } from '@/services/logger';
 import { COLORS } from '@/utils/constants';
 
-const PACKAGE_NAME = '@codefi/cli';
+const PACKAGE_NAME = '@felizz23/codefi';
 
 function fetchLatestVersion(): Promise<string> {
   return new Promise((resolve, reject) => {

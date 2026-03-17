@@ -1,10 +1,11 @@
-import { logger } from '@/services/logger';
+import { logger }       from '@/services/logger';
 import { audioService } from '@/services/audio';
-import { COLORS } from '@/utils/constants';
-import chalk from 'chalk';
+import { COLORS }       from '@/utils/constants';
+import chalk    from 'chalk';
 import { Command } from 'commander';
 
 // ─── Commands ─────────────────────────────────────────────────────────────────
+
 // Playback
 import playCommand     from '@/commands/play';
 import stopCommand     from '@/commands/stop';
@@ -13,29 +14,33 @@ import volumeCommand   from '@/commands/volume';
 import moodCommand     from '@/commands/mood';
 import queueCommand    from '@/commands/queue';
 import sleepCommand    from '@/commands/sleep';
-
-// Library & history
-import playlistCommand from '@/commands/playlist';
-import historyCommand  from '@/commands/history';
-
-// Integrations
-import { spotifyCommand } from '@/commands/spotify';
+import lyricsCommand   from '@/commands/lyrics';
+import weatherCommand  from '@/commands/weather';
 
 // Productivity
 import pomodoroCommand from '@/commands/pomodoro';
+import timerCommand    from '@/commands/timer';
+import focusCommand    from '@/commands/focus';
+
+// Library
+import playlistCommand      from '@/commands/playlist';
+import historyCommand       from '@/commands/history';
+
+// Integrations
+import { spotifyCommand } from '@/commands/spotify';
 
 // Account & settings
 import loginCommand    from '@/commands/login';
 import logoutCommand   from '@/commands/logout';
 import configCommand   from '@/commands/config';
-import aliasCommand, { runAlias }    from '@/commands/alias';
+import aliasCommand, { runAlias } from '@/commands/alias';
 import keybindsCommand from '@/commands/keybinds';
 
 // Tools
-import shareCommand    from '@/commands/share';
-import cacheCommand    from '@/commands/cache';
-import updateCommand   from '@/commands/update';
-import doctorCommand   from '@/commands/doctor';
+import shareCommand  from '@/commands/share';
+import cacheCommand  from '@/commands/cache';
+import updateCommand from '@/commands/update';
+import doctorCommand from '@/commands/doctor';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson: { version: string } = require('../package.json');
@@ -50,6 +55,7 @@ program
   .helpOption('-h, --help', 'Display help for command');
 
 // ─── Register all commands ────────────────────────────────────────────────────
+
 // Playback
 program.addCommand(playCommand);
 program.addCommand(stopCommand);
@@ -58,6 +64,13 @@ program.addCommand(volumeCommand);
 program.addCommand(moodCommand);
 program.addCommand(queueCommand);
 program.addCommand(sleepCommand);
+program.addCommand(lyricsCommand);
+program.addCommand(weatherCommand);
+
+// Productivity
+program.addCommand(pomodoroCommand);
+program.addCommand(timerCommand);
+program.addCommand(focusCommand);
 
 // Library
 program.addCommand(playlistCommand);
@@ -65,9 +78,6 @@ program.addCommand(historyCommand);
 
 // Integrations
 program.addCommand(spotifyCommand);
-
-// Productivity
-program.addCommand(pomodoroCommand);
 
 // Account & settings
 program.addCommand(loginCommand);
@@ -86,25 +96,36 @@ program.addCommand(doctorCommand);
 program.on('--help', () => {
   console.log('');
   console.log(chalk.hex(COLORS.PRIMARY)('Playback'));
-  console.log('  $ codefi play                        # Start playing');
+  console.log('  $ codefi play                        # Start music (background)');
   console.log('  $ codefi play --mood focus           # Pick a mood');
+  console.log('  $ codefi play --interactive          # Show full player UI');
   console.log('  $ codefi play --ai-mood              # AI picks your mood (Pro)');
   console.log('  $ codefi stop                        # Stop music');
   console.log('  $ codefi status                      # What\'s playing now');
-  console.log('  $ codefi volume 60                   # Set volume');
-  console.log('  $ codefi volume +10                  # Relative adjust');
+  console.log('  $ codefi volume 60 / +10 / --mute');
+  console.log('  $ codefi mood                        # Change mood interactively');
+  console.log('  $ codefi lyrics                      # Show lyrics for current track');
   console.log('  $ codefi queue add <youtube-url>     # Queue next track');
   console.log('  $ codefi sleep 30                    # Stop after 30 min');
+  console.log('  $ codefi weather [city]              # Current weather');
+  console.log('');
+  console.log(chalk.hex(COLORS.PRIMARY)('Productivity'));
+  console.log('  $ codefi focus start [minutes]       # Deep focus mode');
+  console.log('  $ codefi focus stop');
+  console.log('  $ codefi timer start                 # Track total coding time');
+  console.log('  $ codefi timer today / week');
+  console.log('  $ codefi pomodoro start              # Pomodoro timer (Pro)');
   console.log('');
   console.log(chalk.hex(COLORS.PRIMARY)('Library'));
-  console.log('  $ codefi mood                        # Change mood interactively');
-  console.log('  $ codefi playlist list               # Browse playlists');
-  console.log('  $ codefi playlist create             # Create a playlist (Pro)');
+  console.log('  $ codefi playlist list / create');
+  console.log('  $ codefi track add <url>             # Add track to playlist');
+  console.log('  $ codefi track remove');
+  console.log('  $ codefi share-playlist share        # Share a playlist');
+  console.log('  $ codefi share-playlist export       # Export to file');
   console.log('  $ codefi history                     # Recently played');
   console.log('  $ codefi history stats               # Listening stats');
   console.log('');
-  console.log(chalk.hex(COLORS.PRIMARY)('Productivity'));
-  console.log('  $ codefi pomodoro start              # Pomodoro timer (Pro)');
+  console.log(chalk.hex(COLORS.PRIMARY)('Integrations'));
   console.log('  $ codefi spotify connect             # Connect Spotify (Pro)');
   console.log('');
   console.log(chalk.hex(COLORS.PRIMARY)('Settings'));
@@ -126,7 +147,6 @@ program.on('--help', () => {
 program.on('command:*', async () => {
   const unknownCmd = program.args[0];
 
-  // Check if it matches a user alias
   const ran = await runAlias(unknownCmd, program.args.slice(1));
   if (ran) return;
 
@@ -164,8 +184,9 @@ function showWelcome(): void {
   logger.newLine();
   logger.info('Quick start:');
   logger.info('  $ codefi doctor           # Check your setup first');
-  logger.info('  $ codefi play             # Start playing');
-  logger.info('  $ codefi status           # What\'s playing');
+  logger.info('  $ codefi play             # Start music in background');
+  logger.info('  $ codefi focus start      # Enter deep focus mode');
+  logger.info('  $ codefi timer start      # Track your coding time');
   logger.info('  $ codefi --help           # All commands');
   logger.newLine();
   logger.info('Docs: https://docs.codefi.dev');
